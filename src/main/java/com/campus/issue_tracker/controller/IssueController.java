@@ -1,0 +1,80 @@
+package com.campus.issue_tracker.controller;
+
+import com.campus.issue_tracker.dto.IssueRequest;
+import com.campus.issue_tracker.entity.*;
+import com.campus.issue_tracker.service.IssueService;
+import com.campus.issue_tracker.service.FileStorageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/issues")
+public class IssueController {
+
+    @Autowired
+    private IssueService issueService;
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @PostMapping("/with-image")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Issue> reportIssueWithImage(
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("location") String location,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            Authentication authentication) {
+
+        IssueRequest request = new IssueRequest();
+        request.setTitle(title);
+        request.setDescription(description);
+        request.setLocation(location);
+
+        Issue issue = issueService.createIssue(request, authentication.getName());
+
+        if (file != null && !file.isEmpty()) {
+            String fileName = fileStorageService.save(file);
+            issue.setAttachmentPath(fileName);
+            // Save again to update the path
+            issue = issueService.saveDirectly(issue);
+        }
+
+        return ResponseEntity.ok(issue);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Issue> reportIssue(@RequestBody IssueRequest request, Authentication authentication) {
+        return ResponseEntity.ok(issueService.createIssue(request, authentication.getName()));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Issue>> getAllIssues() {
+        return ResponseEntity.ok(issueService.getAllIssues());
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<Issue> updateStatus(@PathVariable Long id, @RequestParam IssueStatus status) {
+        return ResponseEntity.ok(issueService.updateStatus(id, status));
+    }
+
+    @GetMapping("/paged")
+    public ResponseEntity<Page<Issue>> getIssuesPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        return ResponseEntity.ok(issueService.getIssuesPaged(page, size, sortBy, direction));
+    }
+}
