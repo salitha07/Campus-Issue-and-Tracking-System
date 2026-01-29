@@ -1,0 +1,112 @@
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #2af598 0%, #009efd 100%);
+    --warning-yellow: #ffc107;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.btn-view-details {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-view-details:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.status-update-group {
+    background: #f1f3f9;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid #e1e4e8;
+}
+
+.status-select {
+    border: none !important;
+    background: transparent !important;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4a5568;
+    padding-right: 30px !important;
+}
+
+.btn-update-status {
+    background: white;
+    color: #764ba2;
+    border: 1px solid #764ba2;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-update-status:hover {
+    background: #764ba2;
+    color: white;
+}
+
+.star-rating {
+    font-size: 2.5rem;
+    color: #ccc;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.star-rating .star {
+    transition: color 0.1s;
+    padding: 0 2px;
+}
+
+.star-rating .star:hover,
+.star-rating .star:hover ~ .star {
+    color: var(--warning-yellow);
+}
+
+.star-rating .star.selected {
+    color: var(--warning-yellow) !important;
+}
+
+.text-warning {
+    color: var(--warning-yellow) !important;
+}
+
+.table thead th {
+    border-top: none;
+    background: #fdfdfd;
+    color: #718096;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1.25rem;
+}
+
+.table tbody td {
+    padding: 1.25rem;
+    vertical-align: middle;
+    color: #2d3748;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 6px;
+    font-weight: 600;
+}

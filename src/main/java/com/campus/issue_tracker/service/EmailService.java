@@ -16,9 +16,12 @@ public class EmailService {
         message.setFrom("eaahashara01@gmail.com");
         message.setTo(toEmail);
         message.setSubject("Campus Issue Update: #" + issueId);
-        message.setText("Hello,\n\nThe status of your reported issue #" + issueId +
-                " has been updated to: " + newStatus +
-                ".\n\nThank you for helping us improve the campus!");
+
+        String text = "Hello,\n\nThe status of your reported issue #" + issueId +
+                " has been updated to: " + newStatus + "." +
+                "\n\nThank you for helping us improve the campus!";
+
+        message.setText(text);
 
         mailSender.send(message);
         System.out.println("Email sent successfully to " + toEmail);
