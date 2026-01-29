@@ -37,6 +37,11 @@ public class Issue {
     private LocalDateTime updatedAt;
     private String attachmentPath;
 
+    @Column(length = 1000)
+    private String studentFeedback;
+
+    private Integer rating;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
