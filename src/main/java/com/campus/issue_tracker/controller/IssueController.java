@@ -64,8 +64,18 @@ public class IssueController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
-    public ResponseEntity<Issue> updateStatus(@PathVariable Long id, @RequestParam IssueStatus status) {
+    public ResponseEntity<Issue> updateStatus(@PathVariable Long id,
+            @RequestParam IssueStatus status) {
         return ResponseEntity.ok(issueService.updateStatus(id, status));
+    }
+
+    @PatchMapping("/{id}/feedback")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Issue> addFeedback(@PathVariable Long id,
+            @RequestParam(required = false) String feedback,
+            @RequestParam(required = false) Integer rating,
+            Authentication authentication) {
+        return ResponseEntity.ok(issueService.addStudentFeedback(id, feedback, rating, authentication.getName()));
     }
 
     @GetMapping("/paged")
