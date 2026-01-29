@@ -11,16 +11,32 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendStatusUpdateEmail(String toEmail, Long issueId, String newStatus) {
+    // ==============================
+    // Send OTP Email
+    // ==============================
+    public void sendOtpEmail(String toEmail, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("eaahashara01@gmail.com");
         message.setTo(toEmail);
-        message.setSubject("Campus Issue Update: #" + issueId);
-        message.setText("Hello,\n\nThe status of your reported issue #" + issueId +
-                " has been updated to: " + newStatus +
-                ".\n\nThank you for helping us improve the campus!");
-
+        message.setSubject("Campus Issue Tracker - OTP Verification");
+        message.setText(
+                "Your OTP code is: " + otp +
+                        "\nIt will expire in 5 minutes."
+        );
         mailSender.send(message);
-        System.out.println("Email sent successfully to " + toEmail);
+    }
+
+    // ==============================
+    // Send Issue Status Update Email
+    // ==============================
+    public void sendStatusUpdateEmail(String toEmail, Long issueId, String status) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Issue Status Updated - Issue #" + issueId);
+        message.setText(
+                "Your issue with ID #" + issueId +
+                        " has been updated to status: " + status +
+                        "\n\nCampus Issue Tracker"
+        );
+        mailSender.send(message);
     }
 }

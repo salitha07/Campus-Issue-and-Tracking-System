@@ -1,14 +1,11 @@
 package com.campus.issue_tracker.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class LoginRequest {
-
-    @NotBlank
+public class RegisterRequest {
+    private String nameOrUsername;
     private String email;
-
-    @NotBlank
     private String password;
+    private String role; // "student" or "admin"
 }

@@ -8,20 +8,18 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String username;
-
-    @Column(unique = true, nullable = false)
+    private String name;
     private String email;
-
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    @Builder.Default
+    private boolean verified = false;
+
+    private String verificationCode;
 }
