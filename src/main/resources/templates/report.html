@@ -1,4 +1,5 @@
-signup.html<!DOCTYPE html>
+signup.html
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -8,25 +9,51 @@ signup.html<!DOCTYPE html>
 
 <body class="container mt-5">
     <h2>Report a Campus Issue</h2>
-    <form th:action="@{/report}" method="post" enctype="multipart/form-data" class="card p-4 shadow">
+    <form id="reportForm" th:action="@{/report}" method="post" enctype="multipart/form-data" class="card p-4 shadow">
         <div class="mb-3">
             <label class="form-label">Issue Title</label>
-            <input type="text" name="title" class="form-control" placeholder="e.g. Broken Light" required>
+            <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Broken Light" required>
         </div>
         <div class="mb-3">
             <label class="form-label">Location</label>
-            <input type="text" name="location" class="form-control" placeholder="e.g. Block A, Room 102" required>
+            <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Block A, Room 102"
+                required>
         </div>
         <div class="mb-3">
             <label class="form-label">Description</label>
             <textarea name="description" class="form-control" rows="3" required></textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label">Evidence Photo (Optional)</label>
+            <label class="form-label">Evidence Photo</label>
             <input type="file" name="file" class="form-control">
         </div>
         <button type="submit" class="btn btn-success">Submit Report</button>
     </form>
+
+    <script>
+        document.getElementById('reportForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = this;
+            const title = document.getElementById('title').value;
+            const location = document.getElementById('location').value;
+
+            try {
+                const response = await fetch(`/api/issues/check-duplicate?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}`);
+                const isDuplicate = await response.json();
+
+                if (isDuplicate) {
+                    const confirmContinue = confirm("Similar issue already exists. Do you want to continue?");
+                    if (!confirmContinue) {
+                        return; // Stop submission
+                    }
+                }
+                form.submit();
+            } catch (error) {
+                console.error('Error checking for duplicates:', error);
+                form.submit(); // Submit anyway if check fails
+            }
+        });
+    </script>
 </body>
 
 </html>

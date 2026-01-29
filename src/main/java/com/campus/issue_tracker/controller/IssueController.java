@@ -77,4 +77,11 @@ public class IssueController {
 
         return ResponseEntity.ok(issueService.getIssuesPaged(page, size, sortBy, direction));
     }
+
+    @GetMapping("/check-duplicate")
+    public ResponseEntity<Boolean> checkDuplicate(
+            @RequestParam String title,
+            @RequestParam String location) {
+        return ResponseEntity.ok(issueService.isPotentialDuplicate(title, location));
+    }
 }
