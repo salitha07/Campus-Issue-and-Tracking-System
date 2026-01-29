@@ -6,7 +6,7 @@ import org.springframework.web.servlet.config.annotation.*;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    public void addResourceHandlers(@org.springframework.lang.NonNull ResourceHandlerRegistry registry) {
         // This makes http://localhost:8080/uploads/image.jpg work
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");

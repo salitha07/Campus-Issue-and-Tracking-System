@@ -40,6 +40,8 @@ public class IssueService {
     }
 
     public Issue updateStatus(Long issueId, IssueStatus status) {
+        if (issueId == null)
+            throw new IllegalArgumentException("Issue ID cannot be null");
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
@@ -59,13 +61,36 @@ public class IssueService {
         return updatedIssue;
     }
 
+    public Issue addStudentFeedback(Long issueId, String feedback, Integer rating, String username) {
+        if (issueId == null)
+            throw new IllegalArgumentException("Issue ID cannot be null");
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new RuntimeException("Issue not found"));
+
+        if (!issue.getReporter().getUsername().equals(username)) {
+            throw new RuntimeException("Only the reporter can provide feedback");
+        }
+
+        if (issue.getStatus() == IssueStatus.PENDING) {
+            throw new RuntimeException("Feedback can only be provided after staff action");
+        }
+
+        if ((feedback == null || feedback.trim().isEmpty()) && (rating == null || rating == 0)) {
+            throw new RuntimeException("At least a rating or feedback text is required");
+        }
+
+        issue.setStudentFeedback(feedback);
+        issue.setRating(rating);
+        return issueRepository.save(issue);
+    }
+
     public Page<Issue> getIssuesPaged(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return issueRepository.findAll(pageable);
     }
 
-    public Issue saveDirectly(Issue issue) {
+    public Issue saveDirectly(@org.springframework.lang.NonNull Issue issue) {
         return issueRepository.save(issue);
     }
 
