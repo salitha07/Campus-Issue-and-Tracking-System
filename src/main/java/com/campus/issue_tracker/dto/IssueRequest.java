@@ -5,12 +5,12 @@ import lombok.Data;
 
 @Data
 public class IssueRequest {
-  @NotBlank
-  private String title;
+    @NotBlank
+    private String title;
 
-  @NotBlank
-  private String description;
+    @NotBlank
+    private String description;
 
-  @NotBlank
-  private String location;
+    @NotBlank
+    private String location;
 }

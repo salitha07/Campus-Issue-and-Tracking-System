@@ -93,4 +93,10 @@ public class IssueService {
     public Issue saveDirectly(@org.springframework.lang.NonNull Issue issue) {
         return issueRepository.save(issue);
     }
+
+    public boolean isPotentialDuplicate(String title, String location) {
+        List<IssueStatus> activeStatuses = List.of(IssueStatus.PENDING, IssueStatus.IN_PROGRESS);
+        List<Issue> duplicates = issueRepository.findByTitleAndLocationAndStatusIn(title, location, activeStatuses);
+        return !duplicates.isEmpty();
+    }
 }
