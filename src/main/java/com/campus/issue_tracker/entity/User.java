@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -27,4 +28,10 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    private int failedAttempts = 0;
+
+    private boolean accountNonLocked = true;
+
+    private LocalDateTime lockTime;
 }
