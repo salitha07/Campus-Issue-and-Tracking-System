@@ -11,6 +11,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.session.InvalidSessionStrategy;
 
 @Configuration
 @EnableMethodSecurity
@@ -18,6 +21,9 @@ public class WebSecurityConfig {
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -41,7 +47,7 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()) // Keep disabled for now to make testing easier
+        http.csrf(csrf -> {}) // CSRF protection enabled (removes 'disable')
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/signup", "/api/auth/**", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated())
@@ -49,8 +55,12 @@ public class WebSecurityConfig {
                         .loginPage("/login")
                         .loginProcessingUrl("/login") // This matches the form action
                         .defaultSuccessUrl("/dashboard", true)
+                        .failureHandler(customAuthenticationFailureHandler)
                         .permitAll())
                 .logout(logout -> logout.logoutSuccessUrl("/"))
+                .sessionManagement(session -> session
+                        .invalidSessionUrl("/login?timeout=true")
+                        .maximumSessions(1))
                 .userDetailsService(userDetailsService);
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
