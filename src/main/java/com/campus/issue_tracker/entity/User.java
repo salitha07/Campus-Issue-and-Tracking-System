@@ -30,8 +30,8 @@ public class User {
     private Role role;
 
     private int failedAttempts = 0;
-
     private boolean accountNonLocked = true;
-
     private LocalDateTime lockTime;
+
+
 }
