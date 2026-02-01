@@ -23,7 +23,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
 
     @Enumerated(EnumType.STRING)
@@ -33,7 +33,5 @@ public class User {
     private boolean accountNonLocked = true;
     private LocalDateTime lockTime;
 
-    private String verificationCode;
-    private boolean isVerified = false;
 
 }
