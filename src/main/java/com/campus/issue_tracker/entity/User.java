@@ -33,5 +33,7 @@ public class User {
     private boolean accountNonLocked = true;
     private LocalDateTime lockTime;
 
-
+    private String otp;
+    private LocalDateTime otpExpiry;
+    private boolean isVerified = false; // Default to false
 }

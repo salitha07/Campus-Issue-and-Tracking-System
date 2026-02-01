@@ -29,6 +29,9 @@ public class ViewController {
     private FileStorageService fileStorageService;
 
     @Autowired
+    private com.campus.issue_tracker.service.EmailService emailService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -51,10 +54,10 @@ public class ViewController {
 
     @PostMapping("/signup")
     public String processSignup(@RequestParam String username,
-                                @RequestParam String email,
-                                @RequestParam String password,
-                                @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
-                                Model model) {
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
+            Model model) {
         // Check if username already exists
         if (userRepository.findByUsername(username).isPresent()) {
             model.addAttribute("error", "Username is already taken!");
@@ -68,10 +71,47 @@ public class ViewController {
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
 
+        // Generate OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setOtp(otp);
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(5));
+        user.setVerified(false);
+
         userRepository.save(user);
 
-        // Redirect to login page after successful signup
-        return "redirect:/login?registered";
+        // Send OTP Email
+        emailService.sendEmail(email, "Campus Issue Tracker - Verify Email", "Your OTP is: " + otp);
+
+        // Redirect to verify otp page
+        return "redirect:/verify-otp?email=" + email;
+    }
+
+    @GetMapping("/verify-otp")
+    public String verifyOtpPage(@RequestParam String email, Model model) {
+        model.addAttribute("email", email);
+        return "verify-otp";
+    }
+
+    @PostMapping("/verify-otp")
+    public String verifyOtp(@RequestParam String email, @RequestParam String otp, Model model) {
+        java.util.Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (user.getOtp() != null && user.getOtp().equals(otp)
+                    && user.getOtpExpiry().isAfter(java.time.LocalDateTime.now())) {
+                user.setVerified(true);
+                user.setOtp(null);
+                user.setOtpExpiry(null);
+                userRepository.save(user);
+                return "redirect:/login?verified";
+            } else {
+                model.addAttribute("error", "Invalid or expired OTP");
+                model.addAttribute("email", email);
+                return "verify-otp";
+            }
+        }
+        model.addAttribute("error", "User not found");
+        return "verify-otp";
     }
 
     @GetMapping("/report")
@@ -96,7 +136,6 @@ public class ViewController {
         request.setLocation(location);
         request.setLatitude(latitude);
         request.setLongitude(longitude);
-
 
         Issue issue = issueService.createIssue(request, authentication.getName());
 
