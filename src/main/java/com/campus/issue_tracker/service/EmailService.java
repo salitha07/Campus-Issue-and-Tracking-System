@@ -26,4 +26,15 @@ public class EmailService {
         mailSender.send(message);
         System.out.println("Email sent successfully to " + toEmail);
     }
+
+    public void sendEmail(String to, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("eaahashara01@gmail.com");
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body);
+
+        mailSender.send(message);
+        System.out.println("Generic email sent to " + to);
+    }
 }

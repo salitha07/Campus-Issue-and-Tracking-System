@@ -19,52 +19,55 @@ import org.springframework.security.web.session.InvalidSessionStrategy;
 @EnableMethodSecurity
 public class WebSecurityConfig {
 
-    @Autowired
-    UserDetailsServiceImpl userDetailsService;
+        @Autowired
+        UserDetailsServiceImpl userDetailsService;
 
-    @Autowired
-    CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+        @Autowired
+        CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
-    @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
-    }
+        @Bean
+        public AuthTokenFilter authenticationJwtTokenFilter() {
+                return new AuthTokenFilter();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http
-                .getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
-        return authenticationManagerBuilder.build();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+                AuthenticationManagerBuilder authenticationManagerBuilder = http
+                                .getSharedObject(AuthenticationManagerBuilder.class);
+                authenticationManagerBuilder
+                                .userDetailsService(userDetailsService)
+                                .passwordEncoder(passwordEncoder());
+                return authenticationManagerBuilder.build();
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> {}) // CSRF protection enabled (removes 'disable')
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/signup", "/api/auth/**", "/css/**", "/js/**").permitAll()
-                        .anyRequest().authenticated())
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login") // This matches the form action
-                        .defaultSuccessUrl("/dashboard", true)
-                        .failureHandler(customAuthenticationFailureHandler)
-                        .permitAll())
-                .logout(logout -> logout.logoutSuccessUrl("/"))
-                .sessionManagement(session -> session
-                        .invalidSessionUrl("/login?timeout=true")
-                        .maximumSessions(1))
-                .userDetailsService(userDetailsService);
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http.csrf(csrf -> {
+                }) // CSRF protection enabled (removes 'disable')
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/", "/login", "/signup", "/verify-otp",
+                                                                "/api/auth/**", "/css/**", "/js/**")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .loginProcessingUrl("/login") // This matches the form action
+                                                .defaultSuccessUrl("/dashboard", true)
+                                                .failureHandler(customAuthenticationFailureHandler)
+                                                .permitAll())
+                                .logout(logout -> logout.logoutSuccessUrl("/"))
+                                .sessionManagement(session -> session
+                                                .invalidSessionUrl("/login?timeout=true")
+                                                .maximumSessions(1))
+                                .userDetailsService(userDetailsService);
 
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+                http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 }
