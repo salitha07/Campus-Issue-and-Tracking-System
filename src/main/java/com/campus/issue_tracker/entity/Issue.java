@@ -24,6 +24,9 @@ public class Issue {
 
     @Column(nullable = false)
     private String location; // e.g., "Library Room 2"
+    // Map coordinates (OpenStreetMap / Google Maps)
+    private Double latitude;
+    private Double longitude;
 
     @Enumerated(EnumType.STRING)
     private IssueStatus status = IssueStatus.PENDING;
