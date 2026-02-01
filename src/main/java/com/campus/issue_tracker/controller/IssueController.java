@@ -31,6 +31,9 @@ public class IssueController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("location") String location,
+            @RequestParam("latitude") Double latitude,
+            @RequestParam("longitude") Double longitude,
+
             @RequestParam(value = "file", required = false) MultipartFile file,
             Authentication authentication) {
 
@@ -38,6 +41,9 @@ public class IssueController {
         request.setTitle(title);
         request.setDescription(description);
         request.setLocation(location);
+        request.setLatitude(latitude);
+        request.setLongitude(longitude);
+
 
         Issue issue = issueService.createIssue(request, authentication.getName());
 
