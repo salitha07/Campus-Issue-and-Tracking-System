@@ -29,10 +29,11 @@ public class IssueService {
         issue.setTitle(request.getTitle());
         issue.setDescription(request.getDescription());
         issue.setLocation(request.getLocation());
-        issue.setReporter(reporter);
-        issue.setStatus(IssueStatus.PENDING);
         issue.setLatitude(request.getLatitude());
         issue.setLongitude(request.getLongitude());
+        issue.setReporter(reporter);
+        issue.setStatus(IssueStatus.PENDING);
+
 
         return issueRepository.save(issue);
     }
