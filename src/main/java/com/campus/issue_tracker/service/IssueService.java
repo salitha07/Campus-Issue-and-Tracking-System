@@ -31,6 +31,8 @@ public class IssueService {
         issue.setLocation(request.getLocation());
         issue.setReporter(reporter);
         issue.setStatus(IssueStatus.PENDING);
+        issue.setLatitude(request.getLatitude());
+        issue.setLongitude(request.getLongitude());
 
         return issueRepository.save(issue);
     }
