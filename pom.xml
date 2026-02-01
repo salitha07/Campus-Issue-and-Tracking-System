@@ -15,6 +15,10 @@
         <version>3.3.3</version>
         <relativePath/>
     </parent>
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+    </properties>
+
 
     <dependencies>
         <!-- Web -->

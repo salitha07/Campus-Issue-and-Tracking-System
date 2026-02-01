@@ -50,6 +50,11 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
+        User user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow();
+        if (!user.isVerified()) {
+            return ResponseEntity.badRequest().body("Error: Account not verified. Please check your email.");
+        }
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateTokenFromUsername(authentication.getName());
 

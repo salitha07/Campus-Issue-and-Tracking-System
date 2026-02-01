@@ -49,17 +49,28 @@ public class ViewController {
         return "signup";
     }
 
+    @Autowired
+    private com.campus.issue_tracker.service.EmailService emailService;
+
     @PostMapping("/signup")
     public String processSignup(@RequestParam String username,
-                                @RequestParam String email,
-                                @RequestParam String password,
-                                @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
-                                Model model) {
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
+            Model model) {
         // Check if username already exists
         if (userRepository.findByUsername(username).isPresent()) {
             model.addAttribute("error", "Username is already taken!");
             return "signup";
         }
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            model.addAttribute("error", "Email is already registered!");
+            return "signup";
+        }
+
+        // Generate random 6-digit OTP
+        String verificationCode = String.format("%06d", new java.util.Random().nextInt(999999));
 
         // Create and save new user with encoded password
         User user = new User();
@@ -67,11 +78,44 @@ public class ViewController {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
+        user.setVerificationCode(verificationCode);
+        user.setVerified(false);
 
         userRepository.save(user);
 
-        // Redirect to login page after successful signup
-        return "redirect:/login?registered";
+        // Send verification email
+        emailService.sendVerificationEmail(email, verificationCode);
+
+        // Redirect to verification page
+        return "redirect:/verify?email=" + email;
+    }
+
+    @GetMapping("/verify")
+    public String verifyOtp(@RequestParam String email, Model model) {
+        model.addAttribute("email", email);
+        return "verify";
+    }
+
+    @PostMapping("/verify")
+    public String verifyAccount(@RequestParam String email, @RequestParam String code, Model model) {
+        var userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (user.getVerificationCode() != null && user.getVerificationCode().equals(code)) {
+                user.setVerified(true);
+                user.setVerificationCode(null); // Clear code after successful verification
+                userRepository.save(user);
+                return "redirect:/login?verified";
+            } else {
+                model.addAttribute("error", "Invalid verification code!");
+                model.addAttribute("email", email);
+                return "verify";
+            }
+        }
+
+        model.addAttribute("error", "User not found!");
+        return "redirect:/signup";
     }
 
     @GetMapping("/report")
@@ -96,7 +140,6 @@ public class ViewController {
         request.setLocation(location);
         request.setLatitude(latitude);
         request.setLongitude(longitude);
-
 
         Issue issue = issueService.createIssue(request, authentication.getName());
 
