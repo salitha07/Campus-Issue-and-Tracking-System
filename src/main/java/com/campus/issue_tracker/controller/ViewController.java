@@ -85,6 +85,8 @@ public class ViewController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("location") String location,
+            @RequestParam(value = "latitude", required = false) Double latitude,
+            @RequestParam(value = "longitude", required = false) Double longitude,
             @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
             Authentication authentication) {
 
@@ -92,6 +94,9 @@ public class ViewController {
         request.setTitle(title);
         request.setDescription(description);
         request.setLocation(location);
+        request.setLatitude(latitude);
+        request.setLongitude(longitude);
+
 
         Issue issue = issueService.createIssue(request, authentication.getName());
 

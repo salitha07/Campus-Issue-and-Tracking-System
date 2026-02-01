@@ -15,7 +15,6 @@ public class IssueRequest {
     @NotBlank
     private String location;
 
-    @NotNull
-    private Double latitude;
-    private Double longitude;
+    @NotNull private Double latitude;
+    @NotNull private Double longitude;
 }
