@@ -31,6 +31,10 @@ public class Issue {
     @Enumerated(EnumType.STRING)
     private IssueStatus status = IssueStatus.PENDING;
 
+    // ✅ Anonymous reporting (true = hide details from other students)
+    @Column(nullable = false)
+    private boolean anonymous = false;
+
     // The Relationship: Many issues belong to one reporter (User)
     @ManyToOne
     @JoinColumn(name = "reporter_id", nullable = false)
