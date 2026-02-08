@@ -16,21 +16,29 @@
 
 <body class="container mt-5">
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Campus Issues Dashboard</h2>
-    <div>
-        <a href="/report" class="btn btn-success" sec:authorize="hasRole('STUDENT')">Report New Issue</a>
-        <form th:action="@{/logout}" method="post" style="display: inline;">
-            <button type="submit" class="btn btn-danger">Logout</button>
+
+    <h2 class="dashboard-title">Campus Issues Dashboard</h2>
+
+    <div class="d-flex gap-2">
+
+        <!-- Report button (students only) -->
+        <a href="/report-options" class="btn btn-success" sec:authorize="hasRole('STUDENT')">
+            + Report New Issue
+        </a>
+
+        <!-- Logout button -->
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-danger">
+                Logout
+            </button>
         </form>
+
     </div>
 </div>
 
-<div class="alert alert-info" sec:authorize="hasAnyRole('STAFF', 'ADMIN')">
-    <strong>Staff Mode:</strong> You can update issue status and manage reports.
-</div>
 
-<div class="dashboard-card p-4">
-    <table class="table table-hover mb-0">
+<div class="card shadow-lg p-4 dashboard-card">
+    <table class="table table-hover align-middle">
         <thead>
         <tr>
             <th>ID</th>
@@ -48,21 +56,28 @@
             <td class="fw-bold" th:text="${issue.title}"></td>
             <td th:text="${issue.location}"></td>
             <td>
-                <span th:class="'badge ' + ${issue.status.name() == 'PENDING' ? 'bg-warning text-dark' :
-                               (issue.status.name() == 'IN_PROGRESS' ? 'bg-primary' :
-                               (issue.status.name() == 'RESOLVED' ? 'bg-success' : 'bg-danger'))}"
-                      th:text="${issue.status}"></span>
+                    <span th:class="'badge ' + ${issue.status.name() == 'PENDING' ? 'bg-warning text-dark' :
+                                   (issue.status.name() == 'IN_PROGRESS' ? 'bg-primary' :
+                                   (issue.status.name() == 'RESOLVED' ? 'bg-success' : 'bg-danger'))}"
+                          th:text="${issue.status}"></span>
             </td>
-            <td th:text="${issue.reporter.username}"></td>
 
+            <!-- ✅ Reporter display logic with anonymous masking -->
+            <td>
+                <span th:if="${issue.anonymous and !#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') and (#authentication.name != issue.reporter.username)}">Anonymous</span>
+                <span th:unless="${issue.anonymous and !#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') and (#authentication.name != issue.reporter.username)}"
+                      th:text="${issue.reporter.username}"></span>
+            </td>
+
+            <!-- Feedback visible only to staff/admin OR reporter (existing behavior) -->
             <td th:if="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (#authentication.name == issue.reporter.username)}">
                 <div>
-                    <span th:if="${issue.rating}" class="text-warning">
-                        <span th:each="i : ${#numbers.sequence(1, issue.rating)}">&#9733;</span>
-                    </span>
+                        <span th:if="${issue.rating}" class="text-warning">
+                            <span th:each="i : ${#numbers.sequence(1, issue.rating)}">&#9733;</span>
+                        </span>
                 </div>
                 <small class="text-muted" th:if="${issue.studentFeedback}" th:text="${issue.studentFeedback}"></small>
-                <small class="text-muted fst-italic" th:unless="${issue.studentFeedback}">No feedback yet</small>
+                <small class="text-muted" th:unless="${issue.studentFeedback}">No feedback</small>
             </td>
 
             <td th:unless="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (#authentication.name == issue.reporter.username)}">
@@ -71,8 +86,11 @@
 
             <td>
                 <div class="d-flex align-items-center">
+
+                    <!-- ✅ View Details: blocked for students on anonymous issues (unless own) -->
                     <button type="button"
                             class="btn btn-view-details me-3"
+                            th:if="${!issue.anonymous or #authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (issue.reporter.username == #authentication.name)}"
                             data-bs-toggle="modal"
                             data-bs-target="#issueModal"
                             th:data-id="${issue.id}"
@@ -90,17 +108,23 @@
                         View Details
                     </button>
 
+                    <span class="text-muted me-3"
+                          th:unless="${!issue.anonymous or #authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (issue.reporter.username == #authentication.name)}">
+                            Staff only
+                        </span>
+
+                    <!-- Staff/admin status update (existing) -->
                     <div th:if="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')')}"
                          class="status-update-group d-flex">
-                        <select class="form-select status-select" th:id="'status-' + ${issue.id}">
-                            <option th:each="s : ${T(com.campus.issue_tracker.entity.IssueStatus).values()}"
-                                    th:value="${s}"
-                                    th:text="${s}"
-                                    th:selected="${s.name() == issue.status.name()}">
-                            </option>
+                        <select class="form-select form-select-sm me-2 status-dropdown"
+                                th:id="'status-' + ${issue.id}">
+                            <option th:selected="${issue.status.name() == 'PENDING'}" value="PENDING">PENDING</option>
+                            <option th:selected="${issue.status.name() == 'IN_PROGRESS'}" value="IN_PROGRESS">IN_PROGRESS</option>
+                            <option th:selected="${issue.status.name() == 'RESOLVED'}" value="RESOLVED">RESOLVED</option>
+                            <option th:selected="${issue.status.name() == 'REJECTED'}" value="REJECTED">REJECTED</option>
                         </select>
-                        <button type="button"
-                                class="btn btn-update-status btn-sm px-3"
+
+                        <button class="btn btn-sm btn-primary"
                                 th:onclick="'updateStatus(' + ${issue.id} + ')'">
                             Update
                         </button>
@@ -110,301 +134,211 @@
         </tr>
         </tbody>
     </table>
+
+    <!-- Pagination (existing) -->
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/dashboard(page=${currentPage-1})}">Previous</a>
+            </li>
+
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/dashboard(page=${i})}" th:text="${i+1}"></a>
+            </li>
+
+            <li class="page-item" th:classappend="${currentPage+1 >= totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/dashboard(page=${currentPage+1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
-<!-- Issue Details Modal -->
-<div class="modal fade" id="issueModal" tabindex="-1" aria-labelledby="issueModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+<!-- Issue Details Modal (existing) -->
+<div class="modal fade" id="issueModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title" id="issueModalLabel">Issue Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="modalTitle">Issue Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-                <p><strong>ID:</strong> <span id="modal-id"></span></p>
-                <p><strong>Title:</strong> <span id="modal-title"></span></p>
-                <p><strong>Location:</strong> <span id="modal-loc"></span></p>
-                <p><strong>Status:</strong> <span id="modal-status" class="badge"></span></p>
-                <p><strong>Reporter:</strong> <span id="modal-reporter"></span></p>
+                <p><strong>ID:</strong> <span id="modalId"></span></p>
+                <p><strong>Title:</strong> <span id="modalIssueTitle"></span></p>
+                <p><strong>Description:</strong> <span id="modalDesc"></span></p>
+                <p><strong>Location:</strong> <span id="modalLoc"></span></p>
+                <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                <p><strong>Reporter:</strong> <span id="modalReporter"></span></p>
 
-                <hr>
-                <p><strong>Description:</strong></p>
-                <p id="modal-desc" class="text-secondary"></p>
+                <hr />
+                <h6>Issue Location Map</h6>
+                <div id="issueMap" style="height: 280px; border-radius: 12px;"></div>
 
-                <hr>
-                <div class="mt-2">
-                    <h6>Issue Location on Map</h6>
-                    <div id="modal-map" style="height: 260px; border-radius: 12px;"></div>
+                <div class="mt-3" id="attachmentBlock" style="display:none;">
+                    <h6>Attachment</h6>
+                    <a id="attachmentLink" target="_blank" class="btn btn-sm btn-outline-primary">View Attachment</a>
                 </div>
 
-                <hr>
-                <div class="mt-2">
-                    <h6>Evidence Photo</h6>
-                    <img id="modal-image" src="" alt="Issue evidence"
-                         class="img-fluid rounded"
-                         style="display:none; max-height:320px; object-fit:contain;">
-                    <div id="no-image" class="text-muted" style="display:none;">No image uploaded.</div>
+                <hr />
+
+                <div id="feedbackSection">
+                    <h6>Feedback</h6>
+                    <div id="modalStars" class="text-warning mb-1"></div>
+                    <p id="modalFeedback" class="text-muted mb-0"></p>
                 </div>
 
-                <div id="feedback-section" style="display: none;">
-                    <hr>
-                    <h6>Student Feedback</h6>
+                <div class="mt-4" sec:authorize="hasRole('STUDENT')">
+                    <h6>Add / Update Feedback (Only for your issue)</h6>
+                    <textarea class="form-control mb-2" id="feedbackInput" rows="2" placeholder="Write feedback..."></textarea>
 
-                    <div id="feedback-input-group" style="display: none;">
-                        <div class="star-rating mb-2" id="modal-star-selector">
-                            <span class="star" data-value="5" onclick="setRating(5)">&#9733;</span>
-                            <span class="star" data-value="4" onclick="setRating(4)">&#9733;</span>
-                            <span class="star" data-value="3" onclick="setRating(3)">&#9733;</span>
-                            <span class="star" data-value="2" onclick="setRating(2)">&#9733;</span>
-                            <span class="star" data-value="1" onclick="setRating(1)">&#9733;</span>
-                        </div>
+                    <label class="form-label mb-1">Rating</label>
+                    <select class="form-select mb-3" id="ratingInput">
+                        <option value="">No rating</option>
+                        <option value="1">1 ⭐</option>
+                        <option value="2">2 ⭐⭐</option>
+                        <option value="3">3 ⭐⭐⭐</option>
+                        <option value="4">4 ⭐⭐⭐⭐</option>
+                        <option value="5">5 ⭐⭐⭐⭐⭐</option>
+                    </select>
 
-                        <input type="hidden" id="modal-rating-value" value="0">
-                        <textarea class="form-control mb-2" id="modal-feedback-input" rows="3"
-                                  placeholder="How was the resolution?"></textarea>
-                        <button type="button" class="btn btn-info btn-sm" id="submit-feedback-btn">Submit Feedback</button>
-                    </div>
-
-                    <div id="feedback-display" style="display: none;">
-                        <div id="modal-rating-display" class="text-warning h5 mb-1"></div>
-                        <p class="fst-italic text-muted" id="modal-feedback-text"></p>
-                    </div>
-
-                    <div id="feedback-locked-msg" class="alert alert-warning py-1" style="display: none;">
-                        <small>Feedback can only be provided after staff update the status.</small>
-                    </div>
+                    <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback</button>
                 </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-<nav th:if="${totalPages > 1}">
-    <ul class="pagination">
-        <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
-            <a class="page-link" th:href="@{/dashboard(page=${currentPage - 1})}">Previous</a>
-        </li>
-        <li class="page-item" th:classappend="${currentPage + 1 == totalPages ? 'disabled' : ''}">
-            <a class="page-link" th:href="@{/dashboard(page=${currentPage + 1})}">Next</a>
-        </li>
-    </ul>
-</nav>
-
-<!-- ✅ Leaflet JS must be loaded before map code -->
+<!-- Leaflet JS (existing) -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // ✅ CSRF helper for fetch requests (PATCH)
-    function csrfHeaders() {
-        const tokenEl = document.querySelector('meta[name="_csrf"]');
-        const headerEl = document.querySelector('meta[name="_csrf_header"]');
-        if (!tokenEl || !headerEl) return {};
-        const token = tokenEl.getAttribute('content');
-        const header = headerEl.getAttribute('content');
-        return { [header]: token };
-    }
+    let selectedIssueId = null;
+    let mapInstance = null;
+    let markerInstance = null;
 
-    // Fill modal + feedback UI
-    const issueModal = document.getElementById('issueModal');
-    issueModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
+    const csrfMeta = document.querySelector('meta[name="_csrf"]');
+    const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : null;
+    const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : null;
 
-        const id = button.getAttribute('data-id');
-        const title = button.getAttribute('data-title');
-        const desc = button.getAttribute('data-desc');
-        const loc = button.getAttribute('data-loc');
-        const status = button.getAttribute('data-status');
+    const issueModalEl = document.getElementById("issueModal");
 
-        const attachment = button.getAttribute('data-attachment');
-        const imgEl = document.getElementById('modal-image');
-        const noImgEl = document.getElementById('no-image');
+    // ✅ Bootstrap 5: attach listener to the modal element
+    issueModalEl.addEventListener("show.bs.modal", function (event) {
+        const button = event.relatedTarget; // ✅ correct
+        if (!button) return;
 
-        if (attachment && attachment !== 'null' && attachment.trim() !== '') {
-            imgEl.src = '/uploads/' + encodeURIComponent(attachment);
-            imgEl.style.display = 'block';
-            noImgEl.style.display = 'none';
+        selectedIssueId = button.getAttribute("data-id") || "";
+
+        const title = button.getAttribute("data-title") || "";
+        const desc = button.getAttribute("data-desc") || "";
+        const loc = button.getAttribute("data-loc") || "";
+        const status = button.getAttribute("data-status") || "";
+        const reporter = button.getAttribute("data-reporter") || "";
+
+        const feedback = button.getAttribute("data-feedback") || "";
+        const rating = button.getAttribute("data-rating") || "";
+        const isReporter = button.getAttribute("data-is-reporter") === "true";
+
+        const latAttr = button.getAttribute("data-lat");
+        const lngAttr = button.getAttribute("data-lng");
+        const lat = latAttr ? parseFloat(latAttr) : NaN;
+        const lng = lngAttr ? parseFloat(lngAttr) : NaN;
+
+        const attachment = button.getAttribute("data-attachment") || "";
+
+        // Fill modal text
+        document.getElementById("modalId").innerText = selectedIssueId;
+        document.getElementById("modalIssueTitle").innerText = title;
+        document.getElementById("modalDesc").innerText = desc;
+        document.getElementById("modalLoc").innerText = loc;
+        document.getElementById("modalStatus").innerText = status;
+        document.getElementById("modalReporter").innerText = reporter;
+
+        // Attachment
+        const attachmentBlock = document.getElementById("attachmentBlock");
+        const attachmentLink = document.getElementById("attachmentLink");
+        if (attachment && attachment.trim() !== "") {
+            attachmentBlock.style.display = "block";
+            attachmentLink.href = "/uploads/" + attachment;
         } else {
-            imgEl.src = '';
-            imgEl.style.display = 'none';
-            noImgEl.style.display = 'block';
+            attachmentBlock.style.display = "none";
         }
 
-        const reporter = button.getAttribute('data-reporter');
-        const feedback = button.getAttribute('data-feedback');
-        const rating = button.getAttribute('data-rating');
-        const isReporter = button.getAttribute('data-is-reporter') === 'true';
-
-        document.getElementById('modal-id').textContent = id || '';
-        document.getElementById('modal-title').textContent = title || '';
-        document.getElementById('modal-desc').textContent = desc || '';
-        document.getElementById('modal-loc').textContent = loc || '';
-        document.getElementById('modal-reporter').textContent = reporter || '';
-
-        const statusBadge = document.getElementById('modal-status');
-        statusBadge.textContent = status || '';
-
-        let badgeClass = 'badge ';
-        if (status === 'PENDING') badgeClass += 'bg-warning text-dark';
-        else if (status === 'IN_PROGRESS') badgeClass += 'bg-primary';
-        else if (status === 'RESOLVED') badgeClass += 'bg-success';
-        else if (status === 'REJECTED') badgeClass += 'bg-danger';
-        statusBadge.className = badgeClass;
-
-        const feedbackSection = document.getElementById('feedback-section');
-        const feedbackInputGroup = document.getElementById('feedback-input-group');
-        const feedbackDisplay = document.getElementById('feedback-display');
-        const feedbackLockedMsg = document.getElementById('feedback-locked-msg');
-        const feedbackText = document.getElementById('modal-feedback-text');
-        const ratingDisplay = document.getElementById('modal-rating-display');
-        const feedbackInput = document.getElementById('modal-feedback-input');
-        const submitBtn = document.getElementById('submit-feedback-btn');
-
-        if (isReporter) {
-            feedbackSection.style.display = 'block';
-            if (status === 'PENDING') {
-                feedbackInputGroup.style.display = 'none';
-                feedbackDisplay.style.display = 'none';
-                feedbackLockedMsg.style.display = 'block';
-            } else {
-                feedbackLockedMsg.style.display = 'none';
-                if (feedback && feedback !== 'null' && feedback.trim() !== '') {
-                    feedbackInputGroup.style.display = 'none';
-                    feedbackDisplay.style.display = 'block';
-                    feedbackText.textContent = feedback;
-
-                    ratingDisplay.innerHTML = '';
-                    if (rating && rating !== 'null') {
-                        for (let i = 0; i < parseInt(rating); i++) {
-                            ratingDisplay.innerHTML += '&#9733;';
-                        }
-                    }
-                } else {
-                    feedbackInputGroup.style.display = 'block';
-                    feedbackDisplay.style.display = 'none';
-                    feedbackInput.value = '';
-                    setRating(0);
-                    submitBtn.onclick = () => addFeedback(id);
-                }
+        // Feedback stars
+        const starsDiv = document.getElementById("modalStars");
+        starsDiv.innerHTML = "";
+        if (rating) {
+            const r = parseInt(rating);
+            if (!isNaN(r)) {
+                for (let i = 0; i < r; i++) starsDiv.innerHTML += "&#9733;";
             }
-        } else {
-            feedbackSection.style.display = 'none';
         }
+
+        document.getElementById("modalFeedback").innerText = feedback ? feedback : "No feedback";
+
+        // Only allow feedback input if reporter
+        const feedbackInput = document.getElementById("feedbackInput");
+        const ratingInput = document.getElementById("ratingInput");
+        if (feedbackInput) feedbackInput.disabled = !isReporter;
+        if (ratingInput) ratingInput.disabled = !isReporter;
+
+        // Map (inside modal needs invalidateSize)
+        setTimeout(() => {
+            if (!isNaN(lat) && !isNaN(lng)) {
+                if (mapInstance) {
+                    mapInstance.remove();
+                    mapInstance = null;
+                }
+                mapInstance = L.map("issueMap").setView([lat, lng], 17);
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    maxZoom: 19,
+                    attribution: "© OpenStreetMap"
+                }).addTo(mapInstance);
+
+                markerInstance = L.marker([lat, lng]).addTo(mapInstance);
+                setTimeout(() => mapInstance.invalidateSize(), 200);
+            }
+        }, 250);
     });
 
-    function setRating(val) {
-        document.getElementById('modal-rating-value').value = val;
-        const stars = document.querySelectorAll('#modal-star-selector .star');
-        stars.forEach(star => {
-            const starValue = parseInt(star.getAttribute('data-value'));
-            if (starValue <= val) star.classList.add('selected');
-            else star.classList.remove('selected');
-        });
-    }
+    // ✅ keep only ONE updateStatus
+    function updateStatus(issueId) {
+        const selected = document.getElementById("status-" + issueId).value;
 
-    // ✅ Staff updates status (PATCH + CSRF)
-    async function updateStatus(id) {
-        const status = document.getElementById('status-' + id).value;
-        try {
-            const response = await fetch(`/api/issues/${id}/status?status=${encodeURIComponent(status)}`, {
-                method: 'PATCH',
-                headers: {
-                    ...csrfHeaders()
-                }
-            });
-
-            if (response.ok) {
-                location.reload();
-            } else {
-                const text = await response.text();
-                alert('Failed to update status: ' + response.status + ' ' + text);
+        fetch(`/api/issues/${issueId}/status?status=${selected}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred');
-        }
+        }).then(() => window.location.reload());
     }
 
-    // ✅ Student adds feedback (PATCH + CSRF)
-    async function addFeedback(id) {
-        const feedback = document.getElementById('modal-feedback-input').value;
-        const rating = document.getElementById('modal-rating-value').value;
+    // ✅ keep only ONE submitFeedback
+    function submitFeedback() {
+        const feedbackEl = document.getElementById("feedbackInput");
+        const ratingEl = document.getElementById("ratingInput");
 
-        if (!feedback.trim() && rating === "0") {
-            alert('Please provide at least a star rating or feedback text.');
-            return;
-        }
+        const feedback = feedbackEl ? feedbackEl.value : "";
+        const rating = ratingEl ? ratingEl.value : "";
 
-        try {
-            const url = `/api/issues/${id}/feedback?` +
-                (feedback.trim() ? `feedback=${encodeURIComponent(feedback)}&` : '') +
-                (rating !== "0" ? `rating=${rating}` : '');
+        const params = new URLSearchParams();
+        if (feedback) params.append("feedback", feedback);
+        if (rating) params.append("rating", rating);
 
-            const response = await fetch(url, {
-                method: 'PATCH',
-                headers: {
-                    ...csrfHeaders()
-                }
-            });
-
-            if (response.ok) {
-                location.reload();
-            } else {
-                const text = await response.text();
-                alert('Failed to submit feedback: ' + response.status + ' ' + text);
+        fetch(`/api/issues/${selectedIssueId}/feedback?` + params.toString(), {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred');
-        }
+        }).then(() => window.location.reload());
     }
-
-    // ✅ Map inside modal
-    let modalMap = null;
-    const issueModalEl = document.getElementById('issueModal');
-
-    issueModalEl.addEventListener('shown.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const lat = button.getAttribute('data-lat');
-        const lng = button.getAttribute('data-lng');
-        const mapContainer = document.getElementById('modal-map');
-
-        if (!lat || !lng) {
-            mapContainer.innerHTML = "<div class='alert alert-warning mb-0'>No map location saved for this issue.</div>";
-            return;
-        }
-
-        if (modalMap) {
-            modalMap.remove();
-            modalMap = null;
-        }
-        mapContainer.innerHTML = "";
-
-        modalMap = L.map('modal-map').setView([lat, lng], 18);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(modalMap);
-
-        L.marker([lat, lng]).addTo(modalMap);
-
-        // Fix sizing inside modal
-        setTimeout(() => modalMap.invalidateSize(), 200);
-    });
-
-    issueModalEl.addEventListener('hidden.bs.modal', function () {
-        if (modalMap) {
-            modalMap.remove();
-            modalMap = null;
-        }
-        const mapContainer = document.getElementById('modal-map');
-        if (mapContainer) mapContainer.innerHTML = "";
-    });
 </script>
 
 </body>
+
 </html>

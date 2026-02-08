@@ -31,6 +31,7 @@ public class IssueController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("location") String location,
+            @RequestParam(value = "anonymous", defaultValue = "false") boolean anonymous,
             @RequestParam("latitude") Double latitude,
             @RequestParam("longitude") Double longitude,
 
@@ -43,7 +44,7 @@ public class IssueController {
         request.setLocation(location);
         request.setLatitude(latitude);
         request.setLongitude(longitude);
-
+        request.setAnonymous(anonymous);
 
         Issue issue = issueService.createIssue(request, authentication.getName());
 
@@ -64,6 +65,7 @@ public class IssueController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<List<Issue>> getAllIssues() {
         return ResponseEntity.ok(issueService.getAllIssues());
     }
@@ -71,20 +73,21 @@ public class IssueController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<Issue> updateStatus(@PathVariable Long id,
-            @RequestParam IssueStatus status) {
+                                              @RequestParam IssueStatus status) {
         return ResponseEntity.ok(issueService.updateStatus(id, status));
     }
 
     @PatchMapping("/{id}/feedback")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<Issue> addFeedback(@PathVariable Long id,
-            @RequestParam(required = false) String feedback,
-            @RequestParam(required = false) Integer rating,
-            Authentication authentication) {
+                                             @RequestParam(required = false) String feedback,
+                                             @RequestParam(required = false) Integer rating,
+                                             Authentication authentication) {
         return ResponseEntity.ok(issueService.addStudentFeedback(id, feedback, rating, authentication.getName()));
     }
 
     @GetMapping("/paged")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<Page<Issue>> getIssuesPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,

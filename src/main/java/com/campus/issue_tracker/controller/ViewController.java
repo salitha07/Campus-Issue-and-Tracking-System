@@ -54,15 +54,21 @@ public class ViewController {
 
     @PostMapping("/signup")
     public String processSignup(@RequestParam String username,
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
-            Model model) {
+                                @RequestParam String email,
+                                @RequestParam String password,
+                                @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
+                                Model model) {
         // Check if username already exists
         if (userRepository.findByUsername(username).isPresent()) {
             model.addAttribute("error", "Username is already taken!");
             return "signup";
         }
+        // ✅ Check if email already exists
+        if (userRepository.findByEmail(email).isPresent()) {
+            model.addAttribute("error", "Email is already registered!");
+            return "signup";
+        }
+
 
         // Create and save new user with encoded password
         User user = new User();
@@ -114,8 +120,14 @@ public class ViewController {
         return "verify-otp";
     }
 
+    @GetMapping("/report-options")
+    public String reportOptions() {
+        return "report-options";
+    }
+
     @GetMapping("/report")
-    public String report() {
+    public String report(@RequestParam(name = "anonymous", defaultValue = "false") boolean anonymous, Model model) {
+        model.addAttribute("anonymous", anonymous);
         return "report";
     }
 
@@ -125,6 +137,7 @@ public class ViewController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("location") String location,
+            @RequestParam(value = "anonymous", defaultValue = "false") boolean anonymous,
             @RequestParam(value = "latitude", required = false) Double latitude,
             @RequestParam(value = "longitude", required = false) Double longitude,
             @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
@@ -136,6 +149,7 @@ public class ViewController {
         request.setLocation(location);
         request.setLatitude(latitude);
         request.setLongitude(longitude);
+        request.setAnonymous(anonymous);
 
         Issue issue = issueService.createIssue(request, authentication.getName());
 

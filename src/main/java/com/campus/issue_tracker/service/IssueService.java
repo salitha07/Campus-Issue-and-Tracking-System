@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -16,10 +17,9 @@ public class IssueService {
 
     @Autowired
     private IssueRepository issueRepository;
+
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private EmailService emailService;
 
     public Issue createIssue(IssueRequest request, String username) {
         User reporter = userRepository.findByUsername(username)
@@ -34,72 +34,57 @@ public class IssueService {
         issue.setReporter(reporter);
         issue.setStatus(IssueStatus.PENDING);
 
+        // ✅ Save anonymous flag
+        issue.setAnonymous(request.isAnonymous());
 
+        return issueRepository.save(issue);
+    }
+
+    public Issue saveDirectly(Issue issue) {
         return issueRepository.save(issue);
     }
 
     public List<Issue> getAllIssues() {
-        return issueRepository.findAll();
+        return issueRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
-    public Issue updateStatus(Long issueId, IssueStatus status) {
-        if (issueId == null)
-            throw new IllegalArgumentException("Issue ID cannot be null");
-        Issue issue = issueRepository.findById(issueId)
+    public Issue updateStatus(Long id, IssueStatus newStatus) {
+        Issue issue = issueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
-        issue.setStatus(status);
-        Issue updatedIssue = issueRepository.save(issue);
-
-        // Send email to the reporter
-        try {
-            emailService.sendStatusUpdateEmail(
-                    updatedIssue.getReporter().getEmail(),
-                    updatedIssue.getId(),
-                    status.name());
-        } catch (Exception e) {
-            System.out.println("Failed to send email: " + e.getMessage());
-        }
-
-        return updatedIssue;
+        issue.setStatus(newStatus);
+        return issueRepository.save(issue);
     }
 
-    public Issue addStudentFeedback(Long issueId, String feedback, Integer rating, String username) {
-        if (issueId == null)
-            throw new IllegalArgumentException("Issue ID cannot be null");
-        Issue issue = issueRepository.findById(issueId)
+    public Issue addStudentFeedback(Long id, String feedback, Integer rating, String username) {
+        Issue issue = issueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
+        // Only the reporter can add feedback
         if (!issue.getReporter().getUsername().equals(username)) {
-            throw new RuntimeException("Only the reporter can provide feedback");
+            throw new RuntimeException("You can only provide feedback for your own issue");
         }
 
-        if (issue.getStatus() == IssueStatus.PENDING) {
-            throw new RuntimeException("Feedback can only be provided after staff action");
-        }
-
-        if ((feedback == null || feedback.trim().isEmpty()) && (rating == null || rating == 0)) {
-            throw new RuntimeException("At least a rating or feedback text is required");
-        }
-
+        // Feedback can be empty (for just rating)
         issue.setStudentFeedback(feedback);
         issue.setRating(rating);
+
         return issueRepository.save(issue);
     }
 
     public Page<Issue> getIssuesPaged(int page, int size, String sortBy, String direction) {
-        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
         Pageable pageable = PageRequest.of(page, size, sort);
         return issueRepository.findAll(pageable);
     }
 
-    public Issue saveDirectly(@org.springframework.lang.NonNull Issue issue) {
-        return issueRepository.save(issue);
-    }
-
     public boolean isPotentialDuplicate(String title, String location) {
-        List<IssueStatus> activeStatuses = List.of(IssueStatus.PENDING, IssueStatus.IN_PROGRESS);
-        List<Issue> duplicates = issueRepository.findByTitleAndLocationAndStatusIn(title, location, activeStatuses);
-        return !duplicates.isEmpty();
+        // Very simple duplicate check:
+        // Look for same title + location in the last 7 days etc.
+        // For now, just check any matching exact title+location
+        return issueRepository.existsByTitleAndLocation(title, location);
     }
 }
