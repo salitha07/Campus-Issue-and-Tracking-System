@@ -17,4 +17,7 @@ public class IssueRequest {
 
     @NotNull private Double latitude;
     @NotNull private Double longitude;
+
+    // ✅ NEW: anonymous flag
+    private boolean anonymous;
 }

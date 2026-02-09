@@ -50,10 +50,11 @@ public class WebSecurityConfig {
                 http.csrf(csrf -> {
                 }) // CSRF protection enabled (removes 'disable')
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/", "/login", "/signup", "/verify-otp",
-                                                                "/api/auth/**", "/css/**", "/js/**")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
+                                        .requestMatchers("/", "/login", "/signup", "/verify-otp",
+                                                "/api/auth/**", "/css/**", "/js/**", "/images/**")
+                                        .permitAll()
+
+                                        .anyRequest().authenticated())
                                 .formLogin(form -> form
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/login") // This matches the form action
