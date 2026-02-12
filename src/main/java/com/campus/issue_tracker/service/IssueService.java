@@ -30,7 +30,21 @@ public class IssueService {
         Issue issue = new Issue();
         issue.setTitle(request.getTitle());
         issue.setDescription(request.getDescription());
-        issue.setLocation(request.getLocation());
+        if (request.getLocation() != null && !request.getLocation().isEmpty()) {
+            issue.setLocation(request.getLocation());
+        } else {
+            // Auto-generate location based on category
+            if (request.getCategory() == IssueCategory.ACADEMIC) {
+                issue.setLocation("Academic Issue: " + request.getCourseUnit());
+            } else if (request.getCategory() == IssueCategory.HOSTEL) {
+                issue.setLocation("Hostel: " + request.getHostelBlock() + ", Room: " + request.getRoomNumber());
+            } else if (request.getCategory() == IssueCategory.PAYMENTS) {
+                issue.setLocation("Payment Issue: " + request.getPaymentId());
+            } else {
+                issue.setLocation("Not Specified");
+            }
+        }
+
         issue.setLatitude(request.getLatitude());
         issue.setLongitude(request.getLongitude());
         issue.setReporter(reporter);
@@ -38,6 +52,13 @@ public class IssueService {
 
         // anonymous
         issue.setAnonymous(request.isAnonymous());
+        issue.setCategory(request.getCategory());
+
+        // Category specific fields
+        issue.setCourseUnit(request.getCourseUnit());
+        issue.setPaymentId(request.getPaymentId());
+        issue.setHostelBlock(request.getHostelBlock());
+        issue.setRoomNumber(request.getRoomNumber());
 
         // ✅ escalation initial setup
         issue.setEscalated(false);
