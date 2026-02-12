@@ -19,19 +19,18 @@ public class Issue {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false, length = 1000) // Allows for a long description
+    @Column(nullable = false, length = 1000)
     private String description;
 
     @Column(nullable = false)
-    private String location; // e.g., "Library Room 2"
-    // Map coordinates (OpenStreetMap / Google Maps)
+    private String location;
+
     private Double latitude;
     private Double longitude;
 
     @Enumerated(EnumType.STRING)
     private IssueStatus status = IssueStatus.PENDING;
 
-    // ✅ Anonymous reporting (true = hide details from other students)
     @Column(nullable = false)
     private boolean anonymous = false;
 
@@ -57,6 +56,17 @@ public class Issue {
     private String studentFeedback;
 
     private Integer rating;
+
+    // ✅ AUTO ESCALATION FIELDS
+    private LocalDateTime escalationTime;
+
+    @Column(nullable = false)
+    private boolean escalated = false;
+
+    @Column(nullable = false)
+    private int escalationLevel = 0;
+    // ⏱️ last escalation happened time
+    private LocalDateTime lastEscalatedAt;
 
     @PrePersist
     protected void onCreate() {
