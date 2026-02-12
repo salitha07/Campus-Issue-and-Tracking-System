@@ -54,10 +54,10 @@ public class ViewController {
 
     @PostMapping("/signup")
     public String processSignup(@RequestParam String username,
-                                @RequestParam String email,
-                                @RequestParam String password,
-                                @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
-                                Model model) {
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam(defaultValue = "ROLE_STUDENT") Role role,
+            Model model) {
         // Check if username already exists
         if (userRepository.findByUsername(username).isPresent()) {
             model.addAttribute("error", "Username is already taken!");
@@ -68,7 +68,6 @@ public class ViewController {
             model.addAttribute("error", "Email is already registered!");
             return "signup";
         }
-
 
         // Create and save new user with encoded password
         User user = new User();
@@ -125,10 +124,39 @@ public class ViewController {
         return "report-options";
     }
 
-    @GetMapping("/report")
-    public String report(@RequestParam(name = "anonymous", defaultValue = "false") boolean anonymous, Model model) {
+    @GetMapping("/select-category")
+    public String selectCategory(@RequestParam(name = "anonymous", defaultValue = "false") boolean anonymous,
+            Model model) {
         model.addAttribute("anonymous", anonymous);
-        return "report";
+        return "select-category";
+    }
+
+    @GetMapping("/report/academic")
+    public String reportAcademic(@RequestParam(name = "anonymous", defaultValue = "false") boolean anonymous,
+            Model model) {
+        model.addAttribute("anonymous", anonymous);
+        return "report-academic";
+    }
+
+    @GetMapping("/report/payments")
+    public String reportPayments(@RequestParam(name = "anonymous", defaultValue = "false") boolean anonymous,
+            Model model) {
+        model.addAttribute("anonymous", anonymous);
+        return "report-payments";
+    }
+
+    @GetMapping("/report/hostel")
+    public String reportHostel(@RequestParam(name = "anonymous", defaultValue = "false") boolean anonymous,
+            Model model) {
+        model.addAttribute("anonymous", anonymous);
+        return "report-hostel";
+    }
+
+    @GetMapping("/report/other")
+    public String reportOther(@RequestParam(name = "anonymous", defaultValue = "false") boolean anonymous,
+            Model model) {
+        model.addAttribute("anonymous", anonymous);
+        return "report-other";
     }
 
     @PostMapping("/report")
@@ -138,6 +166,11 @@ public class ViewController {
             @RequestParam("description") String description,
             @RequestParam("location") String location,
             @RequestParam(value = "anonymous", defaultValue = "false") boolean anonymous,
+            @RequestParam(value = "category", required = false) com.campus.issue_tracker.entity.IssueCategory category,
+            @RequestParam(value = "courseUnit", required = false) String courseUnit,
+            @RequestParam(value = "paymentId", required = false) String paymentId,
+            @RequestParam(value = "hostelBlock", required = false) String hostelBlock,
+            @RequestParam(value = "roomNumber", required = false) String roomNumber,
             @RequestParam(value = "latitude", required = false) Double latitude,
             @RequestParam(value = "longitude", required = false) Double longitude,
             @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
@@ -150,6 +183,11 @@ public class ViewController {
         request.setLatitude(latitude);
         request.setLongitude(longitude);
         request.setAnonymous(anonymous);
+        request.setCategory(category);
+        request.setCourseUnit(courseUnit);
+        request.setPaymentId(paymentId);
+        request.setHostelBlock(hostelBlock);
+        request.setRoomNumber(roomNumber);
 
         Issue issue = issueService.createIssue(request, authentication.getName());
 
