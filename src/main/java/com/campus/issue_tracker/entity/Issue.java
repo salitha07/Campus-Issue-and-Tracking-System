@@ -35,6 +35,15 @@ public class Issue {
     @Column(nullable = false)
     private boolean anonymous = false;
 
+    @Enumerated(EnumType.STRING)
+    private IssueCategory category;
+
+    // Category specific fields
+    private String courseUnit; // For ACADEMIC
+    private String paymentId; // For PAYMENTS
+    private String hostelBlock; // For HOSTEL
+    private String roomNumber; // For HOSTEL
+
     // The Relationship: Many issues belong to one reporter (User)
     @ManyToOne
     @JoinColumn(name = "reporter_id", nullable = false)

@@ -15,329 +15,338 @@
 </head>
 
 <body class="container mt-5">
-<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
-    <h2 class="dashboard-title">Campus Issues Dashboard</h2>
+        <h2 class="dashboard-title">Campus Issues Dashboard</h2>
 
-    <div class="d-flex gap-2">
+        <div class="d-flex gap-2">
 
-        <!-- Report button (students only) -->
-        <a href="/report-options" class="btn btn-success" sec:authorize="hasRole('STUDENT')">
-            + Report New Issue
-        </a>
+            <!-- Report button (students only) -->
+            <a href="/report-options" class="btn btn-success" sec:authorize="hasRole('STUDENT')">
+                + Report New Issue
+            </a>
 
-        <!-- Logout button -->
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="btn btn-danger">
-                Logout
-            </button>
-        </form>
+            <!-- Logout button -->
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-danger">
+                    Logout
+                </button>
+            </form>
 
+        </div>
     </div>
-</div>
 
 
-<div class="card shadow-lg p-4 dashboard-card">
-    <table class="table table-hover align-middle">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Location</th>
-            <th>Status</th>
-            <th>Reporter</th>
-            <th>Feedback</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="issue : ${issues}">
-            <td th:text="${issue.id}"></td>
-            <td class="fw-bold" th:text="${issue.title}"></td>
-            <td th:text="${issue.location}"></td>
-            <td>
-                    <span th:class="'badge ' + ${issue.status.name() == 'PENDING' ? 'bg-warning text-dark' :
+    <div class="card shadow-lg p-4 dashboard-card">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Reporter</th>
+                    <th>Feedback</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="issue : ${issues}">
+                    <td th:text="${issue.id}"></td>
+                    <td class="fw-bold" th:text="${issue.title}"></td>
+                    <td>
+                        <span class="badge bg-info text-dark" th:text="${issue.category}"></span>
+                    </td>
+                    <td th:text="${issue.location}"></td>
+                    <td>
+                        <span th:class="'badge ' + ${issue.status.name() == 'PENDING' ? 'bg-warning text-dark' :
                                    (issue.status.name() == 'IN_PROGRESS' ? 'bg-primary' :
                                    (issue.status.name() == 'RESOLVED' ? 'bg-success' : 'bg-danger'))}"
-                          th:text="${issue.status}"></span>
-            </td>
+                            th:text="${issue.status}"></span>
+                    </td>
 
-            <!-- ✅ Reporter display logic with anonymous masking -->
-            <td>
-                <span th:if="${issue.anonymous and !#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') and (#authentication.name != issue.reporter.username)}">Anonymous</span>
-                <span th:unless="${issue.anonymous and !#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') and (#authentication.name != issue.reporter.username)}"
-                      th:text="${issue.reporter.username}"></span>
-            </td>
+                    <!-- ✅ Reporter display logic with anonymous masking -->
+                    <td>
+                        <span
+                            th:if="${issue.anonymous and !#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') and (#authentication.name != issue.reporter.username)}">Anonymous</span>
+                        <span
+                            th:unless="${issue.anonymous and !#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') and (#authentication.name != issue.reporter.username)}"
+                            th:text="${issue.reporter.username}"></span>
+                    </td>
 
-            <!-- Feedback visible only to staff/admin OR reporter (existing behavior) -->
-            <td th:if="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (#authentication.name == issue.reporter.username)}">
-                <div>
-                        <span th:if="${issue.rating}" class="text-warning">
-                            <span th:each="i : ${#numbers.sequence(1, issue.rating)}">&#9733;</span>
-                        </span>
+                    <!-- Feedback visible only to staff/admin OR reporter (existing behavior) -->
+                    <td
+                        th:if="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (#authentication.name == issue.reporter.username)}">
+                        <div>
+                            <span th:if="${issue.rating}" class="text-warning">
+                                <span th:each="i : ${#numbers.sequence(1, issue.rating)}">&#9733;</span>
+                            </span>
+                        </div>
+                        <small class="text-muted" th:if="${issue.studentFeedback}"
+                            th:text="${issue.studentFeedback}"></small>
+                        <small class="text-muted" th:unless="${issue.studentFeedback}">No feedback</small>
+                    </td>
+
+                    <td
+                        th:unless="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (#authentication.name == issue.reporter.username)}">
+                        <span class="text-muted">Private</span>
+                    </td>
+
+                    <td>
+                        <div class="d-flex align-items-center">
+
+                            <!-- ✅ View Details: blocked for students on anonymous issues (unless own) -->
+                            <button type="button" class="btn btn-view-details me-3"
+                                th:if="${!issue.anonymous or #authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (issue.reporter.username == #authentication.name)}"
+                                data-bs-toggle="modal" data-bs-target="#issueModal" th:data-id="${issue.id}"
+                                th:data-title="${issue.title}" th:data-category="${issue.category}"
+                                th:data-desc="${issue.description}" th:data-loc="${issue.location}"
+                                th:data-status="${issue.status}" th:data-reporter="${issue.reporter.username}"
+                                th:data-feedback="${issue.studentFeedback}" th:data-rating="${issue.rating}"
+                                th:data-is-reporter="${issue.reporter.username == #authentication.name}"
+                                th:data-lat="${issue.latitude}" th:data-lng="${issue.longitude}"
+                                th:data-attachment="${issue.attachmentPath}">
+                                View Details
+                            </button>
+
+                            <span class="text-muted me-3"
+                                th:unless="${!issue.anonymous or #authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (issue.reporter.username == #authentication.name)}">
+                                Staff only
+                            </span>
+
+                            <!-- Staff/admin status update (existing) -->
+                            <div th:if="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')')}"
+                                class="status-update-group d-flex">
+                                <select class="form-select form-select-sm me-2 status-dropdown"
+                                    th:id="'status-' + ${issue.id}">
+                                    <option th:selected="${issue.status.name() == 'PENDING'}" value="PENDING">PENDING
+                                    </option>
+                                    <option th:selected="${issue.status.name() == 'IN_PROGRESS'}" value="IN_PROGRESS">
+                                        IN_PROGRESS</option>
+                                    <option th:selected="${issue.status.name() == 'RESOLVED'}" value="RESOLVED">RESOLVED
+                                    </option>
+                                    <option th:selected="${issue.status.name() == 'REJECTED'}" value="REJECTED">REJECTED
+                                    </option>
+                                </select>
+
+                                <button class="btn btn-sm btn-primary" th:onclick="'updateStatus(' + ${issue.id} + ')'">
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination (existing) -->
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/dashboard(page=${currentPage-1})}">Previous</a>
+                </li>
+
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+                    th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/dashboard(page=${i})}" th:text="${i+1}"></a>
+                </li>
+
+                <li class="page-item" th:classappend="${currentPage+1 >= totalPages} ? 'disabled'">
+                    <a class="page-link" th:href="@{/dashboard(page=${currentPage+1})}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Issue Details Modal (existing) -->
+    <div class="modal fade" id="issueModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Issue Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <small class="text-muted" th:if="${issue.studentFeedback}" th:text="${issue.studentFeedback}"></small>
-                <small class="text-muted" th:unless="${issue.studentFeedback}">No feedback</small>
-            </td>
 
-            <td th:unless="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (#authentication.name == issue.reporter.username)}">
-                <span class="text-muted">Private</span>
-            </td>
+                <div class="modal-body">
+                    <p><strong>ID:</strong> <span id="modalId"></span></p>
+                    <p><strong>Title:</strong> <span id="modalIssueTitle"></span></p>
+                    <p><strong>Category:</strong> <span id="modalCategory"></span></p>
+                    <p><strong>Description:</strong> <span id="modalDesc"></span></p>
+                    <p><strong>Location:</strong> <span id="modalLoc"></span></p>
+                    <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                    <p><strong>Reporter:</strong> <span id="modalReporter"></span></p>
 
-            <td>
-                <div class="d-flex align-items-center">
+                    <hr />
+                    <h6>Issue Location Map</h6>
+                    <div id="issueMap" style="height: 280px; border-radius: 12px;"></div>
 
-                    <!-- ✅ View Details: blocked for students on anonymous issues (unless own) -->
-                    <button type="button"
-                            class="btn btn-view-details me-3"
-                            th:if="${!issue.anonymous or #authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (issue.reporter.username == #authentication.name)}"
-                            data-bs-toggle="modal"
-                            data-bs-target="#issueModal"
-                            th:data-id="${issue.id}"
-                            th:data-title="${issue.title}"
-                            th:data-desc="${issue.description}"
-                            th:data-loc="${issue.location}"
-                            th:data-status="${issue.status}"
-                            th:data-reporter="${issue.reporter.username}"
-                            th:data-feedback="${issue.studentFeedback}"
-                            th:data-rating="${issue.rating}"
-                            th:data-is-reporter="${issue.reporter.username == #authentication.name}"
-                            th:data-lat="${issue.latitude}"
-                            th:data-lng="${issue.longitude}"
-                            th:data-attachment="${issue.attachmentPath}">
-                        View Details
-                    </button>
+                    <div class="mt-3" id="attachmentBlock" style="display:none;">
+                        <h6>Attachment</h6>
+                        <a id="attachmentLink" target="_blank" class="btn btn-sm btn-outline-primary">View
+                            Attachment</a>
+                    </div>
 
-                    <span class="text-muted me-3"
-                          th:unless="${!issue.anonymous or #authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')') or (issue.reporter.username == #authentication.name)}">
-                            Staff only
-                        </span>
+                    <hr />
 
-                    <!-- Staff/admin status update (existing) -->
-                    <div th:if="${#authorization.expression('hasAnyRole(''STAFF'', ''ADMIN'')')}"
-                         class="status-update-group d-flex">
-                        <select class="form-select form-select-sm me-2 status-dropdown"
-                                th:id="'status-' + ${issue.id}">
-                            <option th:selected="${issue.status.name() == 'PENDING'}" value="PENDING">PENDING</option>
-                            <option th:selected="${issue.status.name() == 'IN_PROGRESS'}" value="IN_PROGRESS">IN_PROGRESS</option>
-                            <option th:selected="${issue.status.name() == 'RESOLVED'}" value="RESOLVED">RESOLVED</option>
-                            <option th:selected="${issue.status.name() == 'REJECTED'}" value="REJECTED">REJECTED</option>
+                    <div id="feedbackSection">
+                        <h6>Feedback</h6>
+                        <div id="modalStars" class="text-warning mb-1"></div>
+                        <p id="modalFeedback" class="text-muted mb-0"></p>
+                    </div>
+
+                    <div class="mt-4" sec:authorize="hasRole('STUDENT')">
+                        <h6>Add / Update Feedback (Only for your issue)</h6>
+                        <textarea class="form-control mb-2" id="feedbackInput" rows="2"
+                            placeholder="Write feedback..."></textarea>
+
+                        <label class="form-label mb-1">Rating</label>
+                        <select class="form-select mb-3" id="ratingInput">
+                            <option value="">No rating</option>
+                            <option value="1">1 ⭐</option>
+                            <option value="2">2 ⭐⭐</option>
+                            <option value="3">3 ⭐⭐⭐</option>
+                            <option value="4">4 ⭐⭐⭐⭐</option>
+                            <option value="5">5 ⭐⭐⭐⭐⭐</option>
                         </select>
 
-                        <button class="btn btn-sm btn-primary"
-                                th:onclick="'updateStatus(' + ${issue.id} + ')'">
-                            Update
-                        </button>
+                        <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback</button>
                     </div>
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-
-    <!-- Pagination (existing) -->
-    <nav class="mt-3">
-        <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/dashboard(page=${currentPage-1})}">Previous</a>
-            </li>
-
-            <li class="page-item"
-                th:each="i : ${#numbers.sequence(0, totalPages-1)}"
-                th:classappend="${i == currentPage} ? 'active'">
-                <a class="page-link" th:href="@{/dashboard(page=${i})}" th:text="${i+1}"></a>
-            </li>
-
-            <li class="page-item" th:classappend="${currentPage+1 >= totalPages} ? 'disabled'">
-                <a class="page-link" th:href="@{/dashboard(page=${currentPage+1})}">Next</a>
-            </li>
-        </ul>
-    </nav>
-</div>
-
-<!-- Issue Details Modal (existing) -->
-<div class="modal fade" id="issueModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content shadow-lg">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Issue Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-                <p><strong>ID:</strong> <span id="modalId"></span></p>
-                <p><strong>Title:</strong> <span id="modalIssueTitle"></span></p>
-                <p><strong>Description:</strong> <span id="modalDesc"></span></p>
-                <p><strong>Location:</strong> <span id="modalLoc"></span></p>
-                <p><strong>Status:</strong> <span id="modalStatus"></span></p>
-                <p><strong>Reporter:</strong> <span id="modalReporter"></span></p>
-
-                <hr />
-                <h6>Issue Location Map</h6>
-                <div id="issueMap" style="height: 280px; border-radius: 12px;"></div>
-
-                <div class="mt-3" id="attachmentBlock" style="display:none;">
-                    <h6>Attachment</h6>
-                    <a id="attachmentLink" target="_blank" class="btn btn-sm btn-outline-primary">View Attachment</a>
-                </div>
-
-                <hr />
-
-                <div id="feedbackSection">
-                    <h6>Feedback</h6>
-                    <div id="modalStars" class="text-warning mb-1"></div>
-                    <p id="modalFeedback" class="text-muted mb-0"></p>
-                </div>
-
-                <div class="mt-4" sec:authorize="hasRole('STUDENT')">
-                    <h6>Add / Update Feedback (Only for your issue)</h6>
-                    <textarea class="form-control mb-2" id="feedbackInput" rows="2" placeholder="Write feedback..."></textarea>
-
-                    <label class="form-label mb-1">Rating</label>
-                    <select class="form-select mb-3" id="ratingInput">
-                        <option value="">No rating</option>
-                        <option value="1">1 ⭐</option>
-                        <option value="2">2 ⭐⭐</option>
-                        <option value="3">3 ⭐⭐⭐</option>
-                        <option value="4">4 ⭐⭐⭐⭐</option>
-                        <option value="5">5 ⭐⭐⭐⭐⭐</option>
-                    </select>
-
-                    <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Leaflet JS (existing) -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS (existing) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script>
-    let selectedIssueId = null;
-    let mapInstance = null;
-    let markerInstance = null;
+    <script>
+        let selectedIssueId = null;
+        let mapInstance = null;
+        let markerInstance = null;
 
-    const csrfMeta = document.querySelector('meta[name="_csrf"]');
-    const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
-    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : null;
-    const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : null;
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : null;
+        const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : null;
 
-    const issueModalEl = document.getElementById("issueModal");
+        const issueModalEl = document.getElementById("issueModal");
 
-    // ✅ Bootstrap 5: attach listener to the modal element
-    issueModalEl.addEventListener("show.bs.modal", function (event) {
-        const button = event.relatedTarget; // ✅ correct
-        if (!button) return;
+        // ✅ Bootstrap 5: attach listener to the modal element
+        issueModalEl.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // ✅ correct
+            if (!button) return;
 
-        selectedIssueId = button.getAttribute("data-id") || "";
+            selectedIssueId = button.getAttribute("data-id") || "";
 
-        const title = button.getAttribute("data-title") || "";
-        const desc = button.getAttribute("data-desc") || "";
-        const loc = button.getAttribute("data-loc") || "";
-        const status = button.getAttribute("data-status") || "";
-        const reporter = button.getAttribute("data-reporter") || "";
+            const title = button.getAttribute("data-title") || "";
+            const category = button.getAttribute("data-category") || "-";
+            const desc = button.getAttribute("data-desc") || "";
+            const loc = button.getAttribute("data-loc") || "";
+            const status = button.getAttribute("data-status") || "";
+            const reporter = button.getAttribute("data-reporter") || "";
 
-        const feedback = button.getAttribute("data-feedback") || "";
-        const rating = button.getAttribute("data-rating") || "";
-        const isReporter = button.getAttribute("data-is-reporter") === "true";
+            const feedback = button.getAttribute("data-feedback") || "";
+            const rating = button.getAttribute("data-rating") || "";
+            const isReporter = button.getAttribute("data-is-reporter") === "true";
 
-        const latAttr = button.getAttribute("data-lat");
-        const lngAttr = button.getAttribute("data-lng");
-        const lat = latAttr ? parseFloat(latAttr) : NaN;
-        const lng = lngAttr ? parseFloat(lngAttr) : NaN;
+            const latAttr = button.getAttribute("data-lat");
+            const lngAttr = button.getAttribute("data-lng");
+            const lat = latAttr ? parseFloat(latAttr) : NaN;
+            const lng = lngAttr ? parseFloat(lngAttr) : NaN;
 
-        const attachment = button.getAttribute("data-attachment") || "";
+            const attachment = button.getAttribute("data-attachment") || "";
 
-        // Fill modal text
-        document.getElementById("modalId").innerText = selectedIssueId;
-        document.getElementById("modalIssueTitle").innerText = title;
-        document.getElementById("modalDesc").innerText = desc;
-        document.getElementById("modalLoc").innerText = loc;
-        document.getElementById("modalStatus").innerText = status;
-        document.getElementById("modalReporter").innerText = reporter;
+            // Fill modal text
+            document.getElementById("modalId").innerText = selectedIssueId;
+            document.getElementById("modalIssueTitle").innerText = title;
+            document.getElementById("modalCategory").innerText = category;
+            document.getElementById("modalDesc").innerText = desc;
+            document.getElementById("modalLoc").innerText = loc;
+            document.getElementById("modalStatus").innerText = status;
+            document.getElementById("modalReporter").innerText = reporter;
 
-        // Attachment
-        const attachmentBlock = document.getElementById("attachmentBlock");
-        const attachmentLink = document.getElementById("attachmentLink");
-        if (attachment && attachment.trim() !== "") {
-            attachmentBlock.style.display = "block";
-            attachmentLink.href = "/uploads/" + attachment;
-        } else {
-            attachmentBlock.style.display = "none";
-        }
-
-        // Feedback stars
-        const starsDiv = document.getElementById("modalStars");
-        starsDiv.innerHTML = "";
-        if (rating) {
-            const r = parseInt(rating);
-            if (!isNaN(r)) {
-                for (let i = 0; i < r; i++) starsDiv.innerHTML += "&#9733;";
+            // Attachment
+            const attachmentBlock = document.getElementById("attachmentBlock");
+            const attachmentLink = document.getElementById("attachmentLink");
+            if (attachment && attachment.trim() !== "") {
+                attachmentBlock.style.display = "block";
+                attachmentLink.href = "/uploads/" + attachment;
+            } else {
+                attachmentBlock.style.display = "none";
             }
-        }
 
-        document.getElementById("modalFeedback").innerText = feedback ? feedback : "No feedback";
-
-        // Only allow feedback input if reporter
-        const feedbackInput = document.getElementById("feedbackInput");
-        const ratingInput = document.getElementById("ratingInput");
-        if (feedbackInput) feedbackInput.disabled = !isReporter;
-        if (ratingInput) ratingInput.disabled = !isReporter;
-
-        // Map (inside modal needs invalidateSize)
-        setTimeout(() => {
-            if (!isNaN(lat) && !isNaN(lng)) {
-                if (mapInstance) {
-                    mapInstance.remove();
-                    mapInstance = null;
+            // Feedback stars
+            const starsDiv = document.getElementById("modalStars");
+            starsDiv.innerHTML = "";
+            if (rating) {
+                const r = parseInt(rating);
+                if (!isNaN(r)) {
+                    for (let i = 0; i < r; i++) starsDiv.innerHTML += "&#9733;";
                 }
-                mapInstance = L.map("issueMap").setView([lat, lng], 17);
-                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                    maxZoom: 19,
-                    attribution: "© OpenStreetMap"
-                }).addTo(mapInstance);
-
-                markerInstance = L.marker([lat, lng]).addTo(mapInstance);
-                setTimeout(() => mapInstance.invalidateSize(), 200);
             }
-        }, 250);
-    });
 
-    // ✅ keep only ONE updateStatus
-    function updateStatus(issueId) {
-        const selected = document.getElementById("status-" + issueId).value;
+            document.getElementById("modalFeedback").innerText = feedback ? feedback : "No feedback";
 
-        fetch(`/api/issues/${issueId}/status?status=${selected}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
-            }
-        }).then(() => window.location.reload());
-    }
+            // Only allow feedback input if reporter
+            const feedbackInput = document.getElementById("feedbackInput");
+            const ratingInput = document.getElementById("ratingInput");
+            if (feedbackInput) feedbackInput.disabled = !isReporter;
+            if (ratingInput) ratingInput.disabled = !isReporter;
 
-    // ✅ keep only ONE submitFeedback
-    function submitFeedback() {
-        const feedbackEl = document.getElementById("feedbackInput");
-        const ratingEl = document.getElementById("ratingInput");
+            // Map (inside modal needs invalidateSize)
+            setTimeout(() => {
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    if (mapInstance) {
+                        mapInstance.remove();
+                        mapInstance = null;
+                    }
+                    mapInstance = L.map("issueMap").setView([lat, lng], 17);
+                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                        maxZoom: 19,
+                        attribution: "© OpenStreetMap"
+                    }).addTo(mapInstance);
 
-        const feedback = feedbackEl ? feedbackEl.value : "";
-        const rating = ratingEl ? ratingEl.value : "";
+                    markerInstance = L.marker([lat, lng]).addTo(mapInstance);
+                    setTimeout(() => mapInstance.invalidateSize(), 200);
+                }
+            }, 250);
+        });
 
-        const params = new URLSearchParams();
-        if (feedback) params.append("feedback", feedback);
-        if (rating) params.append("rating", rating);
+        // ✅ keep only ONE updateStatus
+        function updateStatus(issueId) {
+            const selected = document.getElementById("status-" + issueId).value;
 
-        fetch(`/api/issues/${selectedIssueId}/feedback?` + params.toString(), {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
-            }
-        }).then(() => window.location.reload());
-    }
-</script>
+            fetch(`/api/issues/${issueId}/status?status=${selected}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
+                }
+            }).then(() => window.location.reload());
+        }
+
+        // ✅ keep only ONE submitFeedback
+        function submitFeedback() {
+            const feedbackEl = document.getElementById("feedbackInput");
+            const ratingEl = document.getElementById("ratingInput");
+
+            const feedback = feedbackEl ? feedbackEl.value : "";
+            const rating = ratingEl ? ratingEl.value : "";
+
+            const params = new URLSearchParams();
+            if (feedback) params.append("feedback", feedback);
+            if (rating) params.append("rating", rating);
+
+            fetch(`/api/issues/${selectedIssueId}/feedback?` + params.toString(), {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(csrfToken && csrfHeader ? { [csrfHeader]: csrfToken } : {})
+                }
+            }).then(() => window.location.reload());
+        }
+    </script>
 
 </body>
 
