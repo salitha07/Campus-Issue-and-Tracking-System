@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,6 +23,7 @@ public class IssueService {
     private UserRepository userRepository;
 
     public Issue createIssue(IssueRequest request, String username) {
+
         User reporter = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -34,8 +36,13 @@ public class IssueService {
         issue.setReporter(reporter);
         issue.setStatus(IssueStatus.PENDING);
 
-        // ✅ Save anonymous flag
+        // anonymous
         issue.setAnonymous(request.isAnonymous());
+
+        // ✅ escalation initial setup
+        issue.setEscalated(false);
+        issue.setEscalationLevel(0);
+        issue.setEscalationTime(LocalDateTime.now());
 
         return issueRepository.save(issue);
     }
@@ -49,23 +56,29 @@ public class IssueService {
     }
 
     public Issue updateStatus(Long id, IssueStatus newStatus) {
+
         Issue issue = issueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
         issue.setStatus(newStatus);
+
+        // ✅ reset escalation when status manually changed
+        issue.setEscalated(false);
+        issue.setEscalationLevel(0);
+        issue.setEscalationTime(LocalDateTime.now());
+
         return issueRepository.save(issue);
     }
 
     public Issue addStudentFeedback(Long id, String feedback, Integer rating, String username) {
+
         Issue issue = issueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
-        // Only the reporter can add feedback
         if (!issue.getReporter().getUsername().equals(username)) {
             throw new RuntimeException("You can only provide feedback for your own issue");
         }
 
-        // Feedback can be empty (for just rating)
         issue.setStudentFeedback(feedback);
         issue.setRating(rating);
 
@@ -73,18 +86,17 @@ public class IssueService {
     }
 
     public Page<Issue> getIssuesPaged(int page, int size, String sortBy, String direction) {
+
         Sort sort = direction.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
+
         return issueRepository.findAll(pageable);
     }
 
     public boolean isPotentialDuplicate(String title, String location) {
-        // Very simple duplicate check:
-        // Look for same title + location in the last 7 days etc.
-        // For now, just check any matching exact title+location
         return issueRepository.existsByTitleAndLocation(title, location);
     }
 }
