@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Campus Issue Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -12,33 +11,6 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link th:href="@{/css/landing.css}" rel="stylesheet">
-
-    <!-- Logo styles (inline for simplicity) -->
-    <style>
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 28px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo {
-            height: 200px;
-            width: auto;
-        }
-
-        .system-name {
-            font-weight: 800;
-            font-size: 1.2rem;
-            color: #ffffff;
-        }
-    </style>
 </head>
 
 <body>
@@ -48,38 +20,39 @@
     <div class="bg-layer" aria-hidden="true"></div>
     <div class="bg-overlay" aria-hidden="true"></div>
 
-    <!-- ✅ TOP BAR WITH LOGO -->
-    <header class="topbar">
-        <div class="brand">
-            <img th:src="@{/images/logo.png}"
-                 alt="Campus Issue Tracker Logo"
-                 class="logo"/>
-            <span class="system-name">Campus Issue Tracker</span>
+    <!-- Top bar -->
+    <header class="main-header">
+        <!-- Left: Logo -->
+        <div class="logo-area">
+            <img src="/images/logo.png" alt="NSBM Logo" class="logo">
         </div>
 
-        <div class="top-actions" th:if="${#authorization.expression('isAnonymous()')}">
-            <a class="btn btn-ghost" th:href="@{/login}">Login</a>
-            <a class="btn btn-primary-solid" th:href="@{/signup}">Register</a>
+        <!-- Center: System Name -->
+        <div class="title-area">
+            <h1>Campus Issue Reporting System</h1>
         </div>
 
-        <div class="top-actions" th:if="${#authorization.expression('isAuthenticated()')}">
-            <a class="btn btn-primary-solid" th:href="@{/dashboard}">Dashboard</a>
+        <!-- Right: Buttons -->
+        <div class="auth-buttons">
+            <a href="/login" class="btn login-btn">Login</a>
+            <a href="/register" class="btn register-btn">Register</a>
         </div>
     </header>
 
-    <!-- HERO -->
+    <!-- HERO (now includes the feature cards on first load) -->
     <section class="hero">
         <h1 class="hero-title animate delay-1">
             Keep the campus safe, clean, and working —
             <span class="grad">report issues in seconds.</span>
         </h1>
 
+        <!-- Typing paragraph (text will be typed by JS) -->
         <p class="hero-sub hero-sub-typing animate delay-2">
-            <span id="typingText"
-                  aria-label="This platform helps NSBM students and staff report maintenance and safety issues fast, so the relevant team can respond quickly and update the status transparently."></span>
+            <span id="typingText" aria-label="This platform helps NSBM students and staff report maintenance and safety issues fast, so the relevant team can respond quickly and update the status transparently."></span>
             <span class="typing-caret" aria-hidden="true"></span>
         </p>
 
+        <!-- Feature cards visible on first page -->
         <div class="info-cards info-cards-hero">
             <div class="info-card">
                 <div class="icon">⚡</div>
@@ -101,7 +74,7 @@
         </div>
     </section>
 
-    <!-- SCROLL CONTENT -->
+    <!-- SCROLL CONTENT (buttons live here, with more spacing) -->
     <section class="scroll-section">
         <div class="big-actions" th:if="${#authorization.expression('isAnonymous()')}">
             <a class="btn btn-primary-solid btn-xl" th:href="@{/login}">Login</a>
@@ -143,17 +116,17 @@
     })();
 </script>
 
-<!-- Typing effect -->
+<!-- Typing effect (continuous loop) -->
 <script>
     (function () {
         const el = document.getElementById("typingText");
         if (!el) return;
 
         const fullText = el.getAttribute("aria-label") || "";
-        const typeSpeed = 28;
-        const pauseAfter = 1100;
-        const deleteSpeed = 16;
-        const pauseBefore = 400;
+        const typeSpeed = 28;      // typing speed (ms)
+        const pauseAfter = 1100;   // pause after full sentence
+        const deleteSpeed = 16;    // deleting speed (ms)
+        const pauseBefore = 400;   // pause before start typing again
 
         let i = 0;
         let deleting = false;
