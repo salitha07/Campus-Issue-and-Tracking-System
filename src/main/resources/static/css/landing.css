@@ -26,7 +26,7 @@ body{
   position: fixed;
   inset: 0;
   z-index: 0;
-  background-image: url("/images/landing-bg.jpg");
+  background-image: url("static/images/landing-bg.jpg");
   background-size: cover;
   background-position: center;
   transform: scale(1.06);

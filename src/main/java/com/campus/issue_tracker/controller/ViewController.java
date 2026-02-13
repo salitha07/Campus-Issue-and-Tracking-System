@@ -164,17 +164,35 @@ public class ViewController {
     public String reportIssueWithImage(
             @RequestParam("title") String title,
             @RequestParam("description") String description,
-            @RequestParam("location") String location,
+            @RequestParam(value = "location", required = false) String location,
             @RequestParam(value = "anonymous", defaultValue = "false") boolean anonymous,
             @RequestParam(value = "category", required = false) com.campus.issue_tracker.entity.IssueCategory category,
             @RequestParam(value = "courseUnit", required = false) String courseUnit,
             @RequestParam(value = "paymentId", required = false) String paymentId,
             @RequestParam(value = "hostelBlock", required = false) String hostelBlock,
             @RequestParam(value = "roomNumber", required = false) String roomNumber,
-            @RequestParam(value = "latitude", required = false) Double latitude,
-            @RequestParam(value = "longitude", required = false) Double longitude,
+            @RequestParam(value = "latitude", required = false) String latitudeStr,
+            @RequestParam(value = "longitude", required = false) String longitudeStr,
             @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
             Authentication authentication) {
+
+        Double latitude = null;
+        if (latitudeStr != null && !latitudeStr.trim().isEmpty()) {
+            try {
+                latitude = Double.parseDouble(latitudeStr);
+            } catch (NumberFormatException e) {
+                // Log or ignore, treat as null
+            }
+        }
+
+        Double longitude = null;
+        if (longitudeStr != null && !longitudeStr.trim().isEmpty()) {
+            try {
+                longitude = Double.parseDouble(longitudeStr);
+            } catch (NumberFormatException e) {
+                // Log or ignore, treat as null
+            }
+        }
 
         IssueRequest request = new IssueRequest();
         request.setTitle(title);
