@@ -22,6 +22,9 @@ public class IssueService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     public Issue createIssue(IssueRequest request, String username) {
 
         User reporter = userRepository.findByUsername(username)
@@ -65,7 +68,17 @@ public class IssueService {
         issue.setEscalationLevel(0);
         issue.setEscalationTime(LocalDateTime.now());
 
-        return issueRepository.save(issue);
+        Issue savedIssue = issueRepository.save(issue);
+
+        // Audit Log
+        auditLogService.logEvent(
+                "ISSUE_CREATED",
+                savedIssue.getId(),
+                "Issue",
+                username,
+                "Created issue: " + savedIssue.getTitle());
+
+        return savedIssue;
     }
 
     public Issue saveDirectly(Issue issue) {
@@ -81,6 +94,7 @@ public class IssueService {
         Issue issue = issueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
+        IssueStatus oldStatus = issue.getStatus();
         issue.setStatus(newStatus);
 
         // ✅ reset escalation when status manually changed
@@ -88,7 +102,42 @@ public class IssueService {
         issue.setEscalationLevel(0);
         issue.setEscalationTime(LocalDateTime.now());
 
-        return issueRepository.save(issue);
+        Issue savedIssue = issueRepository.save(issue);
+
+        // Audit Log
+        // We don't have the current user here directly, but we can assume it's a
+        // staff/admin action.
+        // In a real app, we'd pass the principal. For now, we'll log "System/Staff".
+        // OR we can update the controller to pass the username.
+        // Let's rely on the controller passing the username or use
+        // SecurityContextHolder in Service (cleaner but harder to mock).
+        // For simplicity, let's update ONLY the method signature or use
+        // SecurityContextHolder if needed.
+        // Actually, the simplest way without changing method sigs too much is to use
+        // SecurityContextHolder or just log "Staff".
+        // But wait, the controller has Authentication! I should update the controller
+        // to pass username.
+        // However, to avoid changing the controller right now and minimize diffs, I'll
+        // use SecurityContextHolder
+        // OR just log it. Let's start with a generic "Staff/Admin" or check if I can
+        // easily update controller.
+        // Looking at IssueController.java... updateStatus takes Authentication? No.
+        // Let's JUST log it without username for now, or update controller.
+        // Actually, I'll update the controller too, that's better. But wait, I can't
+        // multi-file edit easily.
+        // Let's use SecurityContextHolder to get the current user!
+
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        auditLogService.logEvent(
+                "STATUS_UPDATED",
+                savedIssue.getId(),
+                "Issue",
+                username,
+                "Changed status from " + oldStatus + " to " + newStatus);
+
+        return savedIssue;
     }
 
     public Issue addStudentFeedback(Long id, String feedback, Integer rating, String username) {
@@ -103,7 +152,17 @@ public class IssueService {
         issue.setStudentFeedback(feedback);
         issue.setRating(rating);
 
-        return issueRepository.save(issue);
+        Issue savedIssue = issueRepository.save(issue);
+
+        // Audit Log
+        auditLogService.logEvent(
+                "FEEDBACK_ADDED",
+                savedIssue.getId(),
+                "Issue",
+                username,
+                "Added feedback. Rating: " + rating);
+
+        return savedIssue;
     }
 
     public Page<Issue> getIssuesPaged(int page, int size, String sortBy, String direction) {
