@@ -4,5 +4,6 @@ public enum IssueCategory {
     ACADEMIC,
     PAYMENTS,
     HOSTEL,
+    CAFETERIA,
     OTHER
 }
