@@ -176,7 +176,7 @@ public class IssueService {
         return issueRepository.findAll(pageable);
     }
 
-    public boolean isPotentialDuplicate(String title, String location) {
-        return issueRepository.existsByTitleAndLocation(title, location);
+    public boolean isPotentialDuplicate(String title, IssueCategory category, String location) {
+        return issueRepository.existsByTitleIgnoreCaseAndCategoryAndLocationIgnoreCase(title, category, location);
     }
 }
