@@ -59,6 +59,15 @@ body{
   font-size: 18px;
 }
 
+/* Language switcher (globe icon) */
+.lang-switcher { position: relative; display: inline-block; }
+.lang-switcher-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; cursor: pointer; font-size: 14px; font-weight: 600; }
+.lang-switcher-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+.lang-switcher-menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 140px; background: #1a1d24; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); z-index: 1000; overflow: hidden; }
+.lang-switcher:focus-within .lang-switcher-menu { display: block; }
+.lang-switcher-menu a { display: block; padding: 10px 14px; color: #e0e0e0; text-decoration: none; }
+.lang-switcher-menu a:hover { background: rgba(255,255,255,0.1); color: white; }
+
 /* Top-right buttons */
 .top-actions{
   display: flex;
