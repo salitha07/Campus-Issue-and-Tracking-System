@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 
 <head>
-    <title>Report Academic Issue - Campus Issue Tracker</title>
+    <title th:text="#{app.name}">Campus Issue Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Font -->
@@ -83,45 +83,46 @@
                     <div class="report-card">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h2 class="fw-bold mb-1">Report Academic Issue</h2>
+                                <h2 class="fw-bold mb-1" th:text="#{reportAcademic.title}">Report Academic Issue</h2>
                                 <div class="d-flex gap-2">
-                                    <span class="badge badge-custom bg-primary" th:if="${anonymous}">Anonymous</span>
-                                    <span class="badge badge-custom bg-success" th:unless="${anonymous}">Standard</span>
-                                    <span class="badge badge-custom bg-info text-dark">Category: Academic</span>
+                                    <span class="badge badge-custom bg-primary" th:if="${anonymous}" th:text="#{reportForm.anonymousMode}">Anonymous</span>
+                                    <span class="badge badge-custom bg-success" th:unless="${anonymous}" th:text="#{reportForm.standardMode}">Standard</span>
+                                    <span class="badge badge-custom bg-info text-dark" th:text="#{reportAcademic.categoryLabel}">Category: Academic</span>
                                 </div>
                             </div>
-                            <a class="btn btn-ghost" th:href="@{/select-category(anonymous=${anonymous})}">Change
-                                Class</a>
+                            <div class="d-flex gap-2">
+                                <div th:replace="~{fragments/language-switcher :: language-switcher}"></div>
+                                <a class="btn btn-ghost" th:href="@{/select-category(anonymous=${anonymous})}" th:text="#{reportForm.changeCategory}">Change Category</a>
+                            </div>
                         </div>
 
                         <form id="reportForm" th:action="@{/report}" method="post" enctype="multipart/form-data">
                             <div class="mb-3">
-                                <label class="form-label">Issue Title</label>
+                                <label class="form-label" th:text="#{reportForm.issueTitle}">Issue Title</label>
                                 <input type="text" id="title" name="title" class="form-control"
-                                    placeholder="e.g. Schedule Conflict" required>
+                                    th:placeholder="#{reportAcademic.placeholderTitle}" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Module / Course Unit</label>
+                                <label class="form-label" th:text="#{reportAcademic.moduleUnit}">Module / Course Unit</label>
                                 <input type="text" id="courseUnit" name="courseUnit" class="form-control"
-                                    placeholder="e.g. SE101 - Software Engineering" required>
+                                    th:placeholder="#{reportAcademic.placeholderModule}" required>
                             </div>
 
                             <input type="hidden" id="anonymous" name="anonymous" th:value="${anonymous}">
                             <input type="hidden" name="category" value="ACADEMIC">
 
                             <div class="mb-3">
-                                <label class="form-label">Description</label>
+                                <label class="form-label" th:text="#{reportForm.description}">Description</label>
                                 <textarea id="description" name="description" class="form-control" rows="4"
-                                    placeholder="Describe the academic issue..." required></textarea>
+                                    th:placeholder="#{reportAcademic.placeholderDescribe}" required></textarea>
                             </div>
 
                             <div class="mb-4">
-                                <label class="form-label">Upload Image (optional)</label>
+                                <label class="form-label" th:text="#{reportForm.uploadImage}">Upload Image (optional)</label>
                                 <input type="file" id="file" name="file" class="form-control" accept="image/*">
                             </div>
 
-                            <button type="submit" class="btn btn-primary btn-lg w-100 py-3 rounded-3 mt-2">Submit
-                                Academic Issue</button>
+                            <button type="submit" class="btn btn-primary btn-lg w-100 py-3 rounded-3 mt-2" th:text="#{reportForm.submitAcademic}">Submit Academic Issue</button>
                         </form>
                     </div>
                 </div>
@@ -158,16 +159,15 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
-                    <h5 class="modal-title" id="duplicateModalLabel">⚠️ Duplicate Issue Detected</h5>
+                    <h5 class="modal-title" id="duplicateModalLabel" th:text="#{duplicate.title}">Duplicate Issue Detected</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    A similar issue with the same title, category, and location has already been reported. Do you still
-                    want to submit this issue?
+                <div class="modal-body" th:text="#{duplicate.message}">
+                    A similar issue with the same title, category, and location has already been reported. Do you still want to submit this issue?
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="submitAnywayBtn">Submit Anyway</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{duplicate.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="submitAnywayBtn" th:text="#{duplicate.submitAnyway}">Submit Anyway</button>
                 </div>
             </div>
         </div>
@@ -209,10 +209,6 @@
             form.submit();
         });
     </script>
-</body>
-
-</html>
-</script>
 </body>
 
 </html>
