@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <title th:text="#{app.name}">Campus Issue Tracker</title>
+    <title>Verify OTP - Campus Issue Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Font -->
@@ -70,12 +70,9 @@
             <div class="row justify-content-center">
                 <div class="col-md-5 col-lg-4">
                     <div class="verify-card">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <div class="text-center flex-grow-1">
-                                <h2 class="fw-bold" th:text="#{verify.title}">Verify Email</h2>
-                                <p class="text-white-50" th:text="#{verify.subtitle}">Enter the code sent to your email</p>
-                            </div>
-                            <div th:replace="~{fragments/language-switcher :: language-switcher}"></div>
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold">Verify Email</h2>
+                            <p class="text-white-50">Enter the code sent to your email</p>
                         </div>
 
                         <div th:if="${error}" class="alert alert-danger mb-3" role="alert">
@@ -85,14 +82,14 @@
                         <form th:action="@{/verify-otp}" method="post">
                             <input type="hidden" name="email" th:value="${email}">
                             <div class="mb-4">
-                                <label class="form-label" th:text="#{verify.otpLabel}">OTP Code</label>
-                                <input type="text" name="otp" class="form-control" th:placeholder="#{verify.placeholderOtp}"
+                                <label class="form-label">OTP Code</label>
+                                <input type="text" name="otp" class="form-control" placeholder="Enter 6-digit code"
                                     required>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3" th:text="#{verify.submit}">Verify Account</button>
+                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3">Verify Account</button>
                         </form>
                         <p class="mt-4 text-center">
-                            <a th:href="@{/login}" class="text-link" th:text="#{verify.backLogin}">Back to Login</a>
+                            <a href="/login" class="text-link">Back to Login</a>
                         </p>
                     </div>
                 </div>
