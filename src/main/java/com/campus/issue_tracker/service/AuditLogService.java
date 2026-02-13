@@ -4,6 +4,7 @@ import com.campus.issue_tracker.entity.AuditLog;
 import com.campus.issue_tracker.repository.AuditLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class AuditLogService {
@@ -19,5 +20,13 @@ public class AuditLogService {
         log.setUsername(username);
         log.setDetails(details);
         auditLogRepository.save(log);
+    }
+
+    public List<AuditLog> getLogsForEntity(Long relatedId, String relatedType) {
+        return auditLogRepository.findByRelatedIdAndRelatedTypeOrderByTimestampDesc(relatedId, relatedType);
+    }
+
+    public List<AuditLog> getLogsForUser(String username) {
+        return auditLogRepository.findByUsernameOrderByTimestampDesc(username);
     }
 }
