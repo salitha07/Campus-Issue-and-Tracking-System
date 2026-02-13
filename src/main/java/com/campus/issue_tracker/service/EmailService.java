@@ -11,20 +11,58 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendStatusUpdateEmail(String toEmail, Long issueId, String newStatus) {
+    public void sendIssueCreatedEmail(String toEmail, com.campus.issue_tracker.entity.Issue issue) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("eaahashara01@gmail.com"); // Consider moving to properties if possible, but keeping hardcoded
+                                                   // as found
+        message.setTo(toEmail);
+        message.setSubject("Issue Created: " + issue.getTitle());
+
+        StringBuilder body = new StringBuilder();
+        body.append("Hello,\n\n");
+        body.append("Your issue has been successfully reported.\n\n");
+        body.append("Issue ID: ").append(issue.getId()).append("\n");
+        body.append("Title: ").append(issue.getTitle()).append("\n");
+        body.append("Category: ").append(issue.getCategory()).append("\n");
+        body.append("Status: ").append(issue.getStatus()).append("\n");
+        body.append("Location: ").append(issue.getLocation()).append("\n");
+        body.append("Created Date: ").append(issue.getCreatedAt()).append("\n\n");
+        body.append("We will review it shortly.");
+
+        message.setText(body.toString());
+
+        try {
+            mailSender.send(message);
+            System.out.println("Issue Created Email sent to " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Failed to send Issue Created Email: " + e.getMessage());
+        }
+    }
+
+    public void sendIssueStatusUpdatedEmail(String toEmail, com.campus.issue_tracker.entity.Issue issue,
+            com.campus.issue_tracker.entity.IssueStatus oldStatus) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("eaahashara01@gmail.com");
         message.setTo(toEmail);
-        message.setSubject("Campus Issue Update: #" + issueId);
+        message.setSubject("Issue Status Updated: " + issue.getTitle());
 
-        String text = "Hello,\n\nThe status of your reported issue #" + issueId +
-                " has been updated to: " + newStatus + "." +
-                "\n\nThank you for helping us improve the campus!";
+        StringBuilder body = new StringBuilder();
+        body.append("Hello,\n\n");
+        body.append("The status of your issue has changed.\n\n");
+        body.append("Issue Title: ").append(issue.getTitle()).append("\n");
+        body.append("Old Status: ").append(oldStatus).append("\n");
+        body.append("New Status: ").append(issue.getStatus()).append("\n");
+        body.append("Updated Date: ").append(java.time.LocalDateTime.now()).append("\n\n");
+        body.append("Thank you for using Campus Issue Tracker.");
 
-        message.setText(text);
+        message.setText(body.toString());
 
-        mailSender.send(message);
-        System.out.println("Email sent successfully to " + toEmail);
+        try {
+            mailSender.send(message);
+            System.out.println("Status Update Email sent to " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Failed to send Status Update Email: " + e.getMessage());
+        }
     }
 
     public void sendEmail(String to, String subject, String body) {
@@ -34,7 +72,11 @@ public class EmailService {
         message.setSubject(subject);
         message.setText(body);
 
-        mailSender.send(message);
-        System.out.println("Generic email sent to " + to);
+        try {
+            mailSender.send(message);
+            System.out.println("Generic email sent to " + to);
+        } catch (Exception e) {
+            System.err.println("Failed to send generic email: " + e.getMessage());
+        }
     }
 }

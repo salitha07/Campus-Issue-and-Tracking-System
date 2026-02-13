@@ -3,6 +3,7 @@ package com.campus.issue_tracker.service;
 import com.campus.issue_tracker.dto.IssueRequest;
 import com.campus.issue_tracker.entity.*;
 import com.campus.issue_tracker.repository.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,9 @@ public class IssueService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     public Issue createIssue(IssueRequest request, String username) {
 
@@ -65,7 +69,16 @@ public class IssueService {
         issue.setEscalationLevel(0);
         issue.setEscalationTime(LocalDateTime.now());
 
-        return issueRepository.save(issue);
+        Issue savedIssue = issueRepository.save(issue);
+
+        // Send Email
+        try {
+            emailService.sendIssueCreatedEmail(savedIssue.getReporter().getEmail(), savedIssue);
+        } catch (Exception e) {
+            System.err.println("Error sending creation email: " + e.getMessage());
+        }
+
+        return savedIssue;
     }
 
     public Issue saveDirectly(Issue issue) {
@@ -81,6 +94,7 @@ public class IssueService {
         Issue issue = issueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
+        IssueStatus oldStatus = issue.getStatus();
         issue.setStatus(newStatus);
 
         // ✅ reset escalation when status manually changed
@@ -88,7 +102,16 @@ public class IssueService {
         issue.setEscalationLevel(0);
         issue.setEscalationTime(LocalDateTime.now());
 
-        return issueRepository.save(issue);
+        Issue savedIssue = issueRepository.save(issue);
+
+        // Send Email
+        try {
+            emailService.sendIssueStatusUpdatedEmail(savedIssue.getReporter().getEmail(), savedIssue, oldStatus);
+        } catch (Exception e) {
+            System.err.println("Error sending status update email: " + e.getMessage());
+        }
+
+        return savedIssue;
     }
 
     public Issue addStudentFeedback(Long id, String feedback, Integer rating, String username) {
@@ -115,6 +138,20 @@ public class IssueService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return issueRepository.findAll(pageable);
+    }
+
+    public Page<Issue> getIssuesWithFilters(int page, int size, String sortBy, String direction,
+            String query, IssueCategory category, IssueStatus status, String dateRange) {
+
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Issue> spec = IssueSpecification.filterIssues(query, category, status, dateRange);
+
+        return issueRepository.findAll(spec, pageable);
     }
 
     public boolean isPotentialDuplicate(String title, String location) {
