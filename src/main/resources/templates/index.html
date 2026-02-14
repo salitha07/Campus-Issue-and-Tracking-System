@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:lang="${#locale.language}">
 <head>
-    <title>Campus Issue Tracker</title>
+    <title th:text="#{app.name}">Campus Issue Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
     <!-- Font -->
@@ -52,51 +53,52 @@
     <header class="topbar">
         <div class="brand">
             <img th:src="@{/images/logo.png}"
-                 alt="Campus Issue Tracker Logo"
+                 th:alt="#{app.name}"
                  class="logo"/>
-            <span class="system-name">Campus Issue Tracker</span>
+            <span class="system-name" th:text="#{app.name}">Campus Issue Tracker</span>
         </div>
 
-        <div class="top-actions" th:if="${#authorization.expression('isAnonymous()')}">
-            <a class="btn btn-ghost" th:href="@{/login}">Login</a>
-            <a class="btn btn-primary-solid" th:href="@{/signup}">Register</a>
+        <div class="top-actions d-flex align-items-center gap-2" th:if="${#authorization.expression('isAnonymous()')}">
+            <div th:replace="~{fragments/language-switcher :: language-switcher}"></div>
+            <a class="btn btn-ghost" th:href="@{/login}" th:text="#{nav.login}">Login</a>
+            <a class="btn btn-primary-solid" th:href="@{/signup}" th:text="#{nav.register}">Register</a>
         </div>
 
-        <div class="top-actions" th:if="${#authorization.expression('isAuthenticated()')}">
-            <a class="btn btn-primary-solid" th:href="@{/dashboard}">Dashboard</a>
+        <div class="top-actions d-flex align-items-center gap-2" th:if="${#authorization.expression('isAuthenticated()')}">
+            <div th:replace="~{fragments/language-switcher :: language-switcher}"></div>
+            <a class="btn btn-primary-solid" th:href="@{/dashboard}" th:text="#{nav.dashboard}">Dashboard</a>
         </div>
     </header>
 
     <!-- HERO -->
     <section class="hero">
         <h1 class="hero-title animate delay-1">
-            Keep the campus safe, clean, and working —
-            <span class="grad">report issues in seconds.</span>
+            <span th:text="#{hero.title}">Keep the campus safe, clean, and working —</span>
+            <span class="grad" th:text="#{hero.titleHighlight}">report issues in seconds.</span>
         </h1>
 
         <p class="hero-sub hero-sub-typing animate delay-2">
-            <span id="typingText"
-                  aria-label="This platform helps NSBM students and staff report maintenance and safety issues fast, so the relevant team can respond quickly and update the status transparently."></span>
+            <span id="typingText" th:attr="aria-label=#{hero.typingText},data-typing-text=#{hero.typingText}"></span>
             <span class="typing-caret" aria-hidden="true"></span>
         </p>
 
         <div class="info-cards info-cards-hero">
             <div class="info-card">
                 <div class="icon">⚡</div>
-                <h4>Fast Reporting</h4>
-                <p>Submit issues with clear location details and photos.</p>
+                <h4 th:text="#{card.fastReporting}">Fast Reporting</h4>
+                <p th:text="#{card.fastReportingDesc}">Submit issues with clear location details and photos.</p>
             </div>
 
             <div class="info-card">
                 <div class="icon">🕵️</div>
-                <h4>Anonymous Option</h4>
-                <p>Report issues without revealing your identity.</p>
+                <h4 th:text="#{card.anonymousOption}">Anonymous Option</h4>
+                <p th:text="#{card.anonymousOptionDesc}">Report issues without revealing your identity.</p>
             </div>
 
             <div class="info-card">
                 <div class="icon">📊</div>
-                <h4>Status Tracking</h4>
-                <p>Track progress until the issue is resolved.</p>
+                <h4 th:text="#{card.statusTracking}">Status Tracking</h4>
+                <p th:text="#{card.statusTrackingDesc}">Track progress until the issue is resolved.</p>
             </div>
         </div>
     </section>
@@ -104,12 +106,12 @@
     <!-- SCROLL CONTENT -->
     <section class="scroll-section">
         <div class="big-actions" th:if="${#authorization.expression('isAnonymous()')}">
-            <a class="btn btn-primary-solid btn-xl" th:href="@{/login}">Login</a>
-            <a class="btn btn-outline-light btn-xl" th:href="@{/signup}">Register</a>
+            <a class="btn btn-primary-solid btn-xl" th:href="@{/login}" th:text="#{nav.login}">Login</a>
+            <a class="btn btn-outline-light btn-xl" th:href="@{/signup}" th:text="#{nav.register}">Register</a>
         </div>
 
         <div class="big-actions" th:if="${#authorization.expression('isAuthenticated()')}">
-            <a class="btn btn-primary-solid btn-xl" th:href="@{/dashboard}">Go to Dashboard</a>
+            <a class="btn btn-primary-solid btn-xl" th:href="@{/dashboard}" th:text="#{nav.goDashboard}">Go to Dashboard</a>
         </div>
     </section>
 
@@ -149,7 +151,7 @@
         const el = document.getElementById("typingText");
         if (!el) return;
 
-        const fullText = el.getAttribute("aria-label") || "";
+        const fullText = el.getAttribute("aria-label") || el.getAttribute("data-typing-text") || "";
         const typeSpeed = 28;
         const pauseAfter = 1100;
         const deleteSpeed = 16;

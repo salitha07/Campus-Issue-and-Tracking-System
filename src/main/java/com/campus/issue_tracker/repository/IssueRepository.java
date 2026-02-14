@@ -1,6 +1,7 @@
 package com.campus.issue_tracker.repository;
 
 import com.campus.issue_tracker.entity.Issue;
+import com.campus.issue_tracker.entity.IssueCategory;
 import com.campus.issue_tracker.entity.IssueStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,8 +13,14 @@ import java.util.List;
 public interface IssueRepository extends JpaRepository<Issue, Long>,
                 org.springframework.data.jpa.repository.JpaSpecificationExecutor<Issue> {
 
+<<<<<<< HEAD
         // ✅ duplicate checking
         boolean existsByTitleAndLocation(String title, String location);
+=======
+        // ✅ duplicate checking by Title + Category + Location
+        boolean existsByTitleIgnoreCaseAndCategoryAndLocationIgnoreCase(String title, IssueCategory category,
+                        String location);
+>>>>>>> 27a6afd076407c10bf8b43b1b492e29ab90ebb40
 
         // ✅ find issues by status
         List<Issue> findByStatus(IssueStatus status);
