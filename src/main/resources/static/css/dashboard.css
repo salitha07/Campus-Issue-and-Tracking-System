@@ -1,3 +1,12 @@
+/* Language switcher on light dashboard */
+.lang-switcher { position: relative; display: inline-block; }
+.lang-switcher-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(102,126,234,0.15); border: 1px solid rgba(102,126,234,0.3); border-radius: 8px; color: #4a5568; cursor: pointer; font-size: 14px; font-weight: 600; }
+.lang-switcher-btn:hover { background: rgba(102,126,234,0.25); color: #2d3748; }
+.lang-switcher-menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 140px; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; }
+.lang-switcher:focus-within .lang-switcher-menu { display: block; }
+.lang-switcher-menu a { display: block; padding: 10px 14px; color: #4a5568; text-decoration: none; }
+.lang-switcher-menu a:hover { background: #f7fafc; color: #2d3748; }
+
 :root {
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --secondary-gradient: linear-gradient(135deg, #2af598 0%, #009efd 100%);

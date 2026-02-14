@@ -39,7 +39,7 @@ public class IssueController {
             Authentication authentication) {
 
         IssueRequest request = new IssueRequest();
-        request.setTitle(title);
+        request.setTitle(title.trim());
         request.setDescription(description);
         request.setLocation(location);
         request.setLatitude(latitude);
@@ -73,16 +73,16 @@ public class IssueController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<Issue> updateStatus(@PathVariable Long id,
-                                              @RequestParam IssueStatus status) {
+            @RequestParam IssueStatus status) {
         return ResponseEntity.ok(issueService.updateStatus(id, status));
     }
 
     @PatchMapping("/{id}/feedback")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<Issue> addFeedback(@PathVariable Long id,
-                                             @RequestParam(required = false) String feedback,
-                                             @RequestParam(required = false) Integer rating,
-                                             Authentication authentication) {
+            @RequestParam(required = false) String feedback,
+            @RequestParam(required = false) Integer rating,
+            Authentication authentication) {
         return ResponseEntity.ok(issueService.addStudentFeedback(id, feedback, rating, authentication.getName()));
     }
 
@@ -100,7 +100,9 @@ public class IssueController {
     @GetMapping("/check-duplicate")
     public ResponseEntity<Boolean> checkDuplicate(
             @RequestParam String title,
+            @RequestParam String category,
             @RequestParam String location) {
-        return ResponseEntity.ok(issueService.isPotentialDuplicate(title, location));
+        IssueCategory cat = IssueCategory.valueOf(category.toUpperCase());
+        return ResponseEntity.ok(issueService.isPotentialDuplicate(title, cat, location));
     }
 }

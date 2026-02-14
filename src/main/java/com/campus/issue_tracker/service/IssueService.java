@@ -24,7 +24,11 @@ public class IssueService {
     private UserRepository userRepository;
 
     @Autowired
+<<<<<<< HEAD
     private EmailService emailService;
+=======
+    private AuditLogService auditLogService;
+>>>>>>> 27a6afd076407c10bf8b43b1b492e29ab90ebb40
 
     public Issue createIssue(IssueRequest request, String username) {
 
@@ -71,12 +75,22 @@ public class IssueService {
 
         Issue savedIssue = issueRepository.save(issue);
 
+<<<<<<< HEAD
         // Send Email
         try {
             emailService.sendIssueCreatedEmail(savedIssue.getReporter().getEmail(), savedIssue);
         } catch (Exception e) {
             System.err.println("Error sending creation email: " + e.getMessage());
         }
+=======
+        // Audit Log
+        auditLogService.logEvent(
+                "ISSUE_CREATED",
+                savedIssue.getId(),
+                "Issue",
+                username,
+                "Created issue: " + savedIssue.getTitle());
+>>>>>>> 27a6afd076407c10bf8b43b1b492e29ab90ebb40
 
         return savedIssue;
     }
@@ -104,12 +118,47 @@ public class IssueService {
 
         Issue savedIssue = issueRepository.save(issue);
 
+<<<<<<< HEAD
         // Send Email
         try {
             emailService.sendIssueStatusUpdatedEmail(savedIssue.getReporter().getEmail(), savedIssue, oldStatus);
         } catch (Exception e) {
             System.err.println("Error sending status update email: " + e.getMessage());
         }
+=======
+        // Audit Log
+        // We don't have the current user here directly, but we can assume it's a
+        // staff/admin action.
+        // In a real app, we'd pass the principal. For now, we'll log "System/Staff".
+        // OR we can update the controller to pass the username.
+        // Let's rely on the controller passing the username or use
+        // SecurityContextHolder in Service (cleaner but harder to mock).
+        // For simplicity, let's update ONLY the method signature or use
+        // SecurityContextHolder if needed.
+        // Actually, the simplest way without changing method sigs too much is to use
+        // SecurityContextHolder or just log "Staff".
+        // But wait, the controller has Authentication! I should update the controller
+        // to pass username.
+        // However, to avoid changing the controller right now and minimize diffs, I'll
+        // use SecurityContextHolder
+        // OR just log it. Let's start with a generic "Staff/Admin" or check if I can
+        // easily update controller.
+        // Looking at IssueController.java... updateStatus takes Authentication? No.
+        // Let's JUST log it without username for now, or update controller.
+        // Actually, I'll update the controller too, that's better. But wait, I can't
+        // multi-file edit easily.
+        // Let's use SecurityContextHolder to get the current user!
+
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        auditLogService.logEvent(
+                "STATUS_UPDATED",
+                savedIssue.getId(),
+                "Issue",
+                username,
+                "Changed status from " + oldStatus + " to " + newStatus);
+>>>>>>> 27a6afd076407c10bf8b43b1b492e29ab90ebb40
 
         return savedIssue;
     }
@@ -126,7 +175,17 @@ public class IssueService {
         issue.setStudentFeedback(feedback);
         issue.setRating(rating);
 
-        return issueRepository.save(issue);
+        Issue savedIssue = issueRepository.save(issue);
+
+        // Audit Log
+        auditLogService.logEvent(
+                "FEEDBACK_ADDED",
+                savedIssue.getId(),
+                "Issue",
+                username,
+                "Added feedback. Rating: " + rating);
+
+        return savedIssue;
     }
 
     public Page<Issue> getIssuesPaged(int page, int size, String sortBy, String direction) {
@@ -140,6 +199,7 @@ public class IssueService {
         return issueRepository.findAll(pageable);
     }
 
+<<<<<<< HEAD
     public Page<Issue> getIssuesWithFilters(int page, int size, String sortBy, String direction,
             String query, IssueCategory category, IssueStatus status, String dateRange) {
 
@@ -156,5 +216,9 @@ public class IssueService {
 
     public boolean isPotentialDuplicate(String title, String location) {
         return issueRepository.existsByTitleAndLocation(title, location);
+=======
+    public boolean isPotentialDuplicate(String title, IssueCategory category, String location) {
+        return issueRepository.existsByTitleIgnoreCaseAndCategoryAndLocationIgnoreCase(title, category, location);
+>>>>>>> 27a6afd076407c10bf8b43b1b492e29ab90ebb40
     }
 }

@@ -11,9 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.session.InvalidSessionStrategy;
+
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableMethodSecurity
@@ -47,14 +46,17 @@ public class WebSecurityConfig {
 
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-                http.csrf(csrf -> {
-                }) // CSRF protection enabled (removes 'disable')
+                http.csrf(csrf -> csrf
+                                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())) // CSRF protection
+                                                                                                     // enabled with
+                                                                                                     // cookie-based
+                                                                                                     // token for AJAX
                                 .authorizeHttpRequests(auth -> auth
-                                        .requestMatchers("/", "/login", "/signup", "/verify-otp",
-                                                "/api/auth/**", "/css/**", "/js/**", "/images/**")
-                                        .permitAll()
+                                                .requestMatchers("/", "/login", "/signup", "/verify-otp",
+                                                                "/api/auth/**", "/css/**", "/js/**", "/images/**")
+                                                .permitAll()
 
-                                        .anyRequest().authenticated())
+                                                .anyRequest().authenticated())
                                 .formLogin(form -> form
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/login") // This matches the form action
