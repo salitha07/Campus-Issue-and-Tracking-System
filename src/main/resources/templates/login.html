@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 
 <head>
-    <title>Login - Campus Issue Tracker</title>
+    <title th:text="#{app.name}">Campus Issue Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Font -->
@@ -71,38 +71,41 @@
             <div class="row justify-content-center">
                 <div class="col-md-5 col-lg-4">
                     <div class="login-card">
-                        <div class="text-center mb-4">
-                            <h2 class="fw-bold">Welcome Back</h2>
-                            <p class="text-white-50">Login to continue</p>
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div class="text-center flex-grow-1">
+                                <h2 class="fw-bold" th:text="#{login.title}">Welcome Back</h2>
+                                <p class="text-white-50" th:text="#{login.subtitle}">Login to continue</p>
+                            </div>
+                            <div th:replace="~{fragments/language-switcher :: language-switcher}"></div>
                         </div>
 
-                        <div th:if="${param.error}" class="alert alert-danger mb-3">
+                        <div th:if="${param.error}" class="alert alert-danger mb-3" th:text="#{login.error}">
                             Invalid username or password.
                         </div>
 
-                        <div th:if="${param.logout}" class="alert alert-success mb-3">
+                        <div th:if="${param.logout}" class="alert alert-success mb-3" th:text="#{login.logout}">
                             You have been logged out.
                         </div>
 
-                        <div th:if="${param.verified}" class="alert alert-success mb-3">
+                        <div th:if="${param.verified}" class="alert alert-success mb-3" th:text="#{login.verified}">
                             Email verified! Please login.
                         </div>
 
                         <form th:action="@{/login}" method="post">
                             <div class="mb-3">
-                                <label class="form-label">Username</label>
-                                <input type="text" name="username" class="form-control" placeholder="Enter username"
+                                <label class="form-label" th:text="#{login.username}">Username</label>
+                                <input type="text" name="username" class="form-control" th:placeholder="#{login.placeholderUsername}"
                                     required>
                             </div>
                             <div class="mb-4">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" placeholder="Enter password"
+                                <label class="form-label" th:text="#{login.password}">Password</label>
+                                <input type="password" name="password" class="form-control" th:placeholder="#{login.placeholderPassword}"
                                     required>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3">Login</button>
+                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3" th:text="#{login.submit}">Login</button>
                         </form>
                         <p class="mt-4 text-center text-white-50">
-                            Don't have an account? <a href="/signup" class="text-link">Register</a>
+                            <span th:text="#{login.noAccount}">Don't have an account?</span> <a th:href="@{/signup}" class="text-link" th:text="#{nav.register}">Register</a>
                         </p>
                     </div>
                 </div>
