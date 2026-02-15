@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.campus.issue_tracker.dto.IssueRequest;
 import com.campus.issue_tracker.entity.Issue;
+import com.campus.issue_tracker.entity.IssueCategory;
+import com.campus.issue_tracker.entity.IssueStatus;
 import com.campus.issue_tracker.entity.Role;
 import com.campus.issue_tracker.entity.User;
 import com.campus.issue_tracker.repository.UserRepository;
@@ -220,13 +222,26 @@ public class ViewController {
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model, @RequestParam(defaultValue = "0") int page) {
-        // We fetch page 0, 10 items per page
-        var issuePage = issueService.getIssuesPaged(page, 10, "createdAt", "desc");
+    public String dashboard(Model model,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) IssueCategory category,
+            @RequestParam(required = false) IssueStatus status,
+            @RequestParam(required = false) String dateRange) {
+
+        // Fetch filtered issues
+        var issuePage = issueService.getIssuesWithFilters(page, 10, "createdAt", "desc", q, category, status,
+                dateRange);
 
         model.addAttribute("issues", issuePage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", issuePage.getTotalPages());
+
+        // Pass filter values back to view
+        model.addAttribute("q", q);
+        model.addAttribute("category", category);
+        model.addAttribute("status", status);
+        model.addAttribute("dateRange", dateRange);
 
         return "dashboard";
     }
