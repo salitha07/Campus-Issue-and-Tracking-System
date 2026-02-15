@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <title th:text="#{app.name}">Campus Issue Tracker</title>
+    <title>Sign Up - Campus Issue Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Font -->
@@ -81,41 +81,38 @@
             <div class="row justify-content-center">
                 <div class="col-md-6 col-lg-5">
                     <div class="signup-card">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <div class="text-center flex-grow-1">
-                                <h2 class="fw-bold" th:text="#{signup.title}">Create Account</h2>
-                                <p class="text-white-50" th:text="#{signup.subtitle}">Join the community</p>
-                            </div>
-                            <div th:replace="~{fragments/language-switcher :: language-switcher}"></div>
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold">Create Account</h2>
+                            <p class="text-white-50">Join the community</p>
                         </div>
 
                         <form th:action="@{/signup}" method="post">
                             <div class="mb-3">
-                                <label class="form-label" th:text="#{signup.username}">Username</label>
-                                <input type="text" name="username" class="form-control" th:placeholder="#{signup.placeholderUsername}"
+                                <label class="form-label">Username</label>
+                                <input type="text" name="username" class="form-control" placeholder="Enter username"
                                     required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" th:text="#{signup.email}">Email</label>
-                                <input type="email" name="email" class="form-control" th:placeholder="#{signup.placeholderEmail}"
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" placeholder="Enter email"
                                     required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" th:text="#{signup.password}">Password</label>
-                                <input type="password" name="password" class="form-control" th:placeholder="#{signup.placeholderPassword}"
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" class="form-control" placeholder="Enter password"
                                     required>
                             </div>
                             <div class="mb-4">
-                                <label class="form-label" th:text="#{signup.role}">Role</label>
+                                <label class="form-label">Role</label>
                                 <select name="role" class="form-select">
-                                    <option value="ROLE_STUDENT" th:text="#{signup.roleStudent}">Student</option>
-                                    <option value="ROLE_STAFF" th:text="#{signup.roleStaff}">Staff/Maintenance</option>
+                                    <option value="ROLE_STUDENT">Student</option>
+                                    <option value="ROLE_STAFF">Staff/Maintenance</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3" th:text="#{signup.submit}">Register</button>
+                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3">Register</button>
                         </form>
                         <p class="mt-4 text-center text-white-50">
-                            <span th:text="#{signup.haveAccount}">Already have an account?</span> <a th:href="@{/login}" class="text-link" th:text="#{nav.login}">Login</a>
+                            Already have an account? <a href="/login" class="text-link">Login</a>
                         </p>
                     </div>
                 </div>
