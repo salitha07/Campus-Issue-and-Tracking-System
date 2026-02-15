@@ -2,12 +2,12 @@ package com.campus.issue_tracker.service;
 
 import com.campus.issue_tracker.dto.IssueRequest;
 import com.campus.issue_tracker.entity.*;
-import com.campus.issue_tracker.repository.*;
+import com.campus.issue_tracker.repository.IssueRepository;
+import com.campus.issue_tracker.repository.IssueSpecification;
+import com.campus.issue_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,10 +33,10 @@ public class IssueService {
         Issue issue = new Issue();
         issue.setTitle(request.getTitle());
         issue.setDescription(request.getDescription());
+
         if (request.getLocation() != null && !request.getLocation().isEmpty()) {
             issue.setLocation(request.getLocation());
         } else {
-            // Auto-generate location based on category
             if (request.getCategory() == IssueCategory.ACADEMIC) {
                 issue.setLocation("Academic Issue: " + request.getCourseUnit());
             } else if (request.getCategory() == IssueCategory.HOSTEL) {
@@ -53,24 +53,20 @@ public class IssueService {
         issue.setReporter(reporter);
         issue.setStatus(IssueStatus.PENDING);
 
-        // anonymous
         issue.setAnonymous(request.isAnonymous());
         issue.setCategory(request.getCategory());
 
-        // Category specific fields
         issue.setCourseUnit(request.getCourseUnit());
         issue.setPaymentId(request.getPaymentId());
         issue.setHostelBlock(request.getHostelBlock());
         issue.setRoomNumber(request.getRoomNumber());
 
-        // ✅ escalation initial setup
         issue.setEscalated(false);
         issue.setEscalationLevel(0);
         issue.setEscalationTime(LocalDateTime.now());
 
         Issue savedIssue = issueRepository.save(issue);
 
-        // Audit Log
         auditLogService.logEvent(
                 "ISSUE_CREATED",
                 savedIssue.getId(),
@@ -97,35 +93,11 @@ public class IssueService {
         IssueStatus oldStatus = issue.getStatus();
         issue.setStatus(newStatus);
 
-        // ✅ reset escalation when status manually changed
         issue.setEscalated(false);
         issue.setEscalationLevel(0);
         issue.setEscalationTime(LocalDateTime.now());
 
         Issue savedIssue = issueRepository.save(issue);
-
-        // Audit Log
-        // We don't have the current user here directly, but we can assume it's a
-        // staff/admin action.
-        // In a real app, we'd pass the principal. For now, we'll log "System/Staff".
-        // OR we can update the controller to pass the username.
-        // Let's rely on the controller passing the username or use
-        // SecurityContextHolder in Service (cleaner but harder to mock).
-        // For simplicity, let's update ONLY the method signature or use
-        // SecurityContextHolder if needed.
-        // Actually, the simplest way without changing method sigs too much is to use
-        // SecurityContextHolder or just log "Staff".
-        // But wait, the controller has Authentication! I should update the controller
-        // to pass username.
-        // However, to avoid changing the controller right now and minimize diffs, I'll
-        // use SecurityContextHolder
-        // OR just log it. Let's start with a generic "Staff/Admin" or check if I can
-        // easily update controller.
-        // Looking at IssueController.java... updateStatus takes Authentication? No.
-        // Let's JUST log it without username for now, or update controller.
-        // Actually, I'll update the controller too, that's better. But wait, I can't
-        // multi-file edit easily.
-        // Let's use SecurityContextHolder to get the current user!
 
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication().getName();
@@ -154,7 +126,6 @@ public class IssueService {
 
         Issue savedIssue = issueRepository.save(issue);
 
-        // Audit Log
         auditLogService.logEvent(
                 "FEEDBACK_ADDED",
                 savedIssue.getId(),
@@ -174,6 +145,20 @@ public class IssueService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return issueRepository.findAll(pageable);
+    }
+
+    public Page<Issue> getIssuesWithFilters(int page, int size, String sortBy, String direction,
+            String query, IssueCategory category, IssueStatus status, String dateRange) {
+
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Issue> spec = IssueSpecification.filterIssues(query, category, status, dateRange);
+
+        return issueRepository.findAll(spec, pageable);
     }
 
     public boolean isPotentialDuplicate(String title, IssueCategory category, String location) {
