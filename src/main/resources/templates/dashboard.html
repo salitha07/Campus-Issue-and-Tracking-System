@@ -199,15 +199,24 @@
 
                 <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
                     <a class="page-link"
+<<<<<<< HEAD
                        th:href="@{/dashboard(page=${currentPage - 1}, q=${q}, category=${category}, status=${status}, dateRange=${dateRange})}"
 
                        th:text="#{dashboard.previous}">
+=======
+                        th:href="@{/dashboard(page=${currentPage-1}, q=${q}, category=${category}, status=${status}, dateRange=${dateRange})}"
+                        th:text="#{dashboard.previous}">
+>>>>>>> 68847bcf9240fc77ac923badcc02d60b475d4797
                         Previous
                     </a>
                 </li>
 
+<<<<<<< HEAD
                 <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}
                 "
+=======
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+>>>>>>> 68847bcf9240fc77ac923badcc02d60b475d4797
                     th:classappend="${i == currentPage} ? 'active'">
                     <a class="page-link"
                         th:href="@{/dashboard(page=${i}, q=${q}, category=${category}, status=${status}, dateRange=${dateRange})}"
